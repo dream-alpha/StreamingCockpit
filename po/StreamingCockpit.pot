@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamingCockpit\n"
+"POT-Creation-Date: 2025-07-18 18:22+0200\n"
+"PO-Revision-Date: 2025-07-18 18:23+0200\n"
+"Last-Translator: dream-alpha\n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.6\n"
+"X-Poedit-Basepath: ../src\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "Channel selection"
+msgstr ""
+
+msgid "Infobar/Play"
+msgstr ""
+
+msgid "Play/Pause"
+msgstr ""
+
+msgid "Stop playback"
+msgstr ""
+
+msgid "Skip forward"
+msgstr ""
+
+msgid "Skip backward"
+msgstr ""
+
+msgid "EPG Info"
+msgstr ""
+
+msgid "Do you want to resume playback at position: "
+msgstr ""
+
+msgid "Exit"
+msgstr ""
+
+msgid "Playlist"
+msgstr ""
+
+msgid "End"
+msgstr ""

@@ -1,0 +1,5 @@
+	<screen flags="wfNoBorder" name="StreamingCockpit" position="0,0" size="2560,1440" title="StreamingCockpit">
+		<xmlinc file="screenpart_TitleOnly" source="Title"/>
+		<xmlinc file="screenpart_Background"/>
+		<xmlinc file="screenpart_4Buttons_source" position="0,eval($screen_height-67)" width="eval($screen_width/$4)"/>
+	</screen>
