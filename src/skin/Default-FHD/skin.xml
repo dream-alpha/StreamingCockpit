@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<skin>
+	<screen name="StreamingCockpit" position="center,110" size="1800,930" title="StreamingCockpit">
+		<ePixmap pixmap="Default-FHD/skin_default/buttons/red.svg" position="10,5" size="300,70"/>
+		<ePixmap pixmap="Default-FHD/skin_default/buttons/green.svg" position="310,5" size="300,70"/>
+		<ePixmap pixmap="Default-FHD/skin_default/buttons/yellow.svg" position="610,5" size="300,70"/>
+		<ePixmap pixmap="Default-FHD/skin_default/buttons/blue.svg" position="910,5" size="300,70"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.png" position="0,0" size="1920,1080" zPosition="-1"/>
+		<widget backgroundColor="#000000" cornerRadius="300" name="background" position="center,center" size="540,372" zPosition="2"/>
+		<widget alphatest="blend" name="pic_loading" position="center,365" size="100,100" zPosition="3"/>
+		<widget font="Regular;40" halign="center" name="int_loading" position="center,365" size="80,80" transparent="1" valign="center" zPosition="4"/>
+		<widget font="Regular;40" halign="center" name="msg_loading" position="center,485" size="1800,80" transparent="1" valign="center" zPosition="4"/>
+		<widget backgroundColor="#9f1313" font="Regular;30" halign="center" position="10,5" render="Label" size="300,70" source="key_red" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#1f771f" font="Regular;30" halign="center" position="310,5" render="Label" size="300,70" source="key_green" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#a08500" font="Regular;30" halign="center" position="610,5" render="Label" size="300,70" source="key_yellow" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#18188b" font="Regular;30" halign="center" position="910,5" render="Label" size="300,70" source="key_blue" transparent="1" valign="center" zPosition="1"/>
+	</screen>
+	<screen flags="wfNoBorder" name="STCCockpitPlayer" position="0,825" size="1920,225">
+		<ePixmap alphatest="off" pixmap="skin_default/infobar.png" position="0,0" size="1920,225" zPosition="-1"/>
+		<widget font="Regular;40" noWrap="1" position="230,13" render="Label" size="1100,45" source="Service" transparent="1">
+			<convert type="COCEventName">Name</convert>
+		</widget>
+		<ePixmap pixmap="skin_default/icons/ico_dolby_off.png" position="1460,40" size="74,35"/>
+		<widget pixmap="skin_default/icons/ico_dolby_on.png" position="1460,40" render="Pixmap" size="74,35" source="Service" zPosition="1">
+			<convert type="COCServiceInfo">IsMultichannel</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<ePixmap pixmap="skin_default/icons/ico_format_off.png" position="1550,40" size="74,35"/>
+		<widget pixmap="skin_default/icons/ico_format_on.png" position="1550,40" render="Pixmap" size="74,35" source="Service" zPosition="1">
+			<convert type="COCServiceInfo">IsWidescreen</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<widget pixmap="skin_default/icons/ico_hd_off.png" position="1640,40" render="Pixmap" size="74,35" source="Service">
+			<convert type="COCServiceInfo">VideoWidth</convert>
+			<convert type="ValueRange">0,720</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<widget pixmap="skin_default/icons/ico_hd_on.png" position="1640,40" render="Pixmap" size="74,35" source="Service" zPosition="1">
+			<convert type="COCServiceInfo">VideoWidth</convert>
+			<convert type="ValueRange">721,1980</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<widget pixmap="Default-FHD/skin_default/icons/uhd.svg" position="1640,40" render="Pixmap" size="74,35" source="Service" zPosition="1">
+			<convert type="COCServiceInfo">VideoWidth</convert>
+			<convert type="ValueRange">2160,3840</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<widget pixmap="Default-FHD/skin_default/icons/hdr.svg" position="1730,40" render="Pixmap" size="74,35" source="Service" zPosition="1">
+			<convert type="COCServiceInfo">IsHdr</convert>
+			<convert type="ConditionalShowHide"/>
+		</widget>
+		<widget pixmap="skin_default/icons/icon_rec.png" position="1820,40" render="Pixmap" size="74,35" source="session.RecordState">
+			<convert type="ConditionalShowHide">Blink</convert>
+		</widget>
+		<widget name="player_icon" position="50,80" size="132,132" zPosition="2"/>
+		<widget backgroundColor="background" font="Regular;34" position="230,88" render="Label" size="140,40" source="Service" transparent="1">
+			<convert type="COCServicePosition">Position</convert>
+		</widget>
+		<eLabel backgroundColor="grey" position="370,143" size="1330,4"/>
+		<widget pointer="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-FHD/images/progress.png:1330,0" position="370,140" render="PositionGauge" size="1330,10" source="Service" transparent="1" zPosition="2">
+			<convert type="COCServicePosition">Gauge</convert>
+		</widget>
+		<widget pointer="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-FHD/images/progress_before.png:1330,0" position="370,140" render="PositionGauge" size="1330,10" source="Service" transparent="1" zPosition="3">
+			<convert type="COCBeforeTSPosition">Gauge</convert>
+		</widget>
+		<widget pointer="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-FHD/images/progress_rec.png:1330,0" position="370,140" render="PositionGauge" size="1330,10" source="Service" transparent="1" zPosition="1">
+			<convert type="COCRecordPosition">Gauge</convert>
+		</widget>
+		<widget backgroundColor="background" font="Regular;34" halign="right" position="1740,88" render="Label" size="140,40" source="Service" transparent="1">
+			<convert type="COCServicePosition">Remaining</convert>
+		</widget>
+		<widget font="Regular;36" foregroundColor="yellow" position="975,166" render="Label" size="300,40" source="Service" transparent="1">
+			<convert type="COCMovieInfo">MovieDuration</convert>
+			<convert type="COCClockToText">InMinutes</convert>
+		</widget>
+		<widget backgroundColor="background" font="Regular;34" position="230,166" render="Label" size="120,40" source="global.CurrentTime" transparent="1">
+			<convert type="ClockToText">Default</convert>
+		</widget>
+		<widget backgroundColor="background" font="Regular;34" halign="right" position="1740,166" render="Label" size="140,40" source="Service" transparent="1">
+			<convert type="COCServicePosition">EndTime,ShowNoSeconds</convert>
+		</widget>
+	</screen>
+	<screen id="3" name="STCCockpitPlayerSummary" position="0,0" size="400,240">
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-FHD/images/display_bg.png" position="0,0" size="400,240" zPosition="-1"/>
+		<widget font="Display;60" halign="center" position="5,5" render="Label" size="390,125" source="parent.Service" transparent="1" valign="center">
+			<convert type="COCEventName">Name</convert>
+		</widget>
+		<widget borderWidth="1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/progress_rec_lcd.png" position="center,140" render="Progress" size="380,15" source="parent.Service" transparent="1" zPosition="2">
+			<convert type="COCRecordPosition">Position</convert>
+		</widget>
+		<widget borderWidth="1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/progress_before_lcd.png" position="center,140" render="Progress" size="380,15" source="parent.Service" transparent="1" zPosition="3">
+			<convert type="COCBeforeTSPosition">Position</convert>
+		</widget>
+		<widget borderWidth="1" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/progress_lcd.png" position="center,140" render="Progress" size="380,15" source="parent.Service" transparent="1" zPosition="2">
+			<convert type="COCServicePosition">Position</convert>
+		</widget>
+		<widget font="Display;75" halign="left" position="5,160" render="Label" size="235,80" source="parent.Service" transparent="1" valign="center">
+			<convert type="COCServicePosition">EndTime,ShowNoSeconds</convert>
+		</widget>
+		<widget font="Display;75" halign="right" position="240,160" render="Label" size="155,80" source="parent.Service" transparent="1" valign="center">
+			<convert type="COCServicePosition">Remaining,ShowNoSeconds</convert>
+		</widget>
+	</screen>
+	<screen backgroundColor="#ff000000" flags="wfNoBorder" name="ScreenPVRState" position="center,center" size="100,160" zPosition="1000">
+		<widget name="state_pic" position="0,0" size="100,100" transparent="1"/>
+		<widget backgroundColor="#200d1940" font="Regular;40" halign="center" name="state" position="0,110" size="100,54" transparent="1" valign="center"/>
+	</screen>
+</skin>
