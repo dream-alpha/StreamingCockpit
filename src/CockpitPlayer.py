@@ -34,13 +34,13 @@ from .Debug import logger
 from .__init__ import _
 from .CutList import CutList
 from .CutListUtils import ptsToSeconds, getCutListLast, getCutListFirst
-from .RecordingUtils import isRecording
 from .SkinUtils import getSkinName
 from .CockpitCueSheet import CockpitCueSheet
 from .CockpitPVRState import CockpitPVRState
 from .CockpitSeek import CockpitSeek
 from .BoxUtils import getBoxType
 from .SkinUtils import getSkinPath
+from .ServiceUtils import getService
 
 
 class CockpitPlayerSummary(Screen):
@@ -131,6 +131,8 @@ class CockpitPlayer(
 
     def __serviceStarted(self):
         logger.info("self.is_closing: %s", self.is_closing)
+        self.hide()
+
         if not self.service_started and not self.is_closing and hasattr(self, "config_plugins_plugin"):
             self.service_started = True
             self.downloadCuesheet()
@@ -202,18 +204,22 @@ class CockpitPlayer(
         self.session.nav.stopService()
         self.close()
 
+    def playNextSection(self):
+        logger.info("...")
+        service_path = self.service.getPath()
+        base_path = os.path.splitext(service_path)[0].split("_")[0]
+        index = int(os.path.splitext(service_path)[0].split("_")[-1]) + 1
+        service_path = "%s_%d.ts" % (base_path, index)
+        logger.info("service_path: %s", service_path)
+        self.service = getService(service_path, "PlutoTV - %s" % index)
+        self.showPVRStatePic(False)
+        self.pvr_state_dialog.hide()
+        self.session.nav.playService(self.service)
+
     def doEofInternal(self, playing):
         logger.info("playing: %s, self.execing: %s", playing, self.execing)
         if self.execing:
-            if isRecording(self.service.getPath()) or self.timeshift:
-                if not getBoxType().startswith("dream"):
-                    self.session.nav.stopService()
-                self.session.nav.playService(self.service)
-                self.recoverEoFFailure()
-            else:
-                self.is_closing = True
-            if self.leave_on_eof:
-                self.leavePlayer()
+            self.playNextSection()
 
     def showMovies(self):
         logger.info("...")

@@ -41,10 +41,11 @@ class Loading():
         self.activity_timer = eTimer()
         self.activity_timer_conn = self.activity_timer.timeout.connect(self.doActivityTimer)
         self.pic_index = 0
+        self.seconds = -1
         self.csel["pic_loading"] = Pixmap()
         self.csel["int_loading"] = Label()
         self.csel["msg_loading"] = Label()
-	self.csel["background"] = Label()
+        self.csel["background"] = Label()
         self.csel["background"].hide()
         self.pics = len(glob.glob(resolveFilename(SCOPE_PLUGINS, "Extensions/%s/skin/images/spinner/*.png" % PLUGIN)))
         logger.debug("self.pics: %s", self.pics)

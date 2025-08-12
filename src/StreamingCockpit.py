@@ -22,19 +22,18 @@ import os
 import subprocess
 from Screens.Screen import Screen
 from Screens.ChoiceBox import ChoiceBox
+from Screens.MessageBox import MessageBox
 from Components.ActionMap import ActionMap
 from Components.config import config
 from Components.Sources.StaticText import StaticText
-from Screens.MessageBox import MessageBox
 from Tools.BoundFunction import boundFunction
 from .Debug import logger
-from .__init__ import _
 from .ServiceUtils import getService
 from .CockpitPlayer import CockpitPlayer
 from .ServiceCenter import ServiceCenter
 from .SocketClient import SocketClient
 from .chroot_utils import mount_specials, umount_specials_lazy, mount_bind
-from Loading import Loading
+from .Loading import Loading
 from .__init__ import _
 
 
@@ -80,9 +79,9 @@ class StreamingCockpit(Screen, SocketClient):
 
             # Start the streaming server in a chroot environment
             self.server_proc = subprocess.Popen([
-                "chroot", "/data/ubuntu", "/root/venv/bin/python", "/root/plugins/streamingserver/main.py", "--server"
+                "chroot", "/data/ubuntu", "/root/venv/bin/python", "/root/plugins/streamingserver/main.py"
             ])
-            logger.info("Started streamingserver.py in chroot /data/ubuntu using venv with --server")
+            logger.info("Started streamingserver.py in chroot /data/ubuntu using venv")
         except Exception as e:
             logger.error("Failed to start streamingserver.py in chroot with venv: %s", e)
 
