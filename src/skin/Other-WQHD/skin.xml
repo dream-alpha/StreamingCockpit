@@ -5,11 +5,10 @@
 		<ePixmap pixmap="Default-FHD/skin_default/buttons/green.svg" position="413,7" size="400,93"/>
 		<ePixmap pixmap="Default-FHD/skin_default/buttons/yellow.svg" position="813,7" size="400,93"/>
 		<ePixmap pixmap="Default-FHD/skin_default/buttons/blue.svg" position="1213,7" size="400,93"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.png" position="0,0" size="2560,1440" zPosition="-1"/>
-		<widget backgroundColor="#000000" cornerRadius="400" name="background" position="center,center" size="720,496" zPosition="2"/>
-		<widget alphatest="blend" name="pic_loading" position="center,280" size="133,133" zPosition="3"/>
-		<widget font="Regular;53" halign="center" name="int_loading" position="center,280" size="107,107" transparent="1" valign="center" zPosition="4"/>
-		<widget font="Regular;53" halign="center" name="msg_loading" position="center,440" size="2400,107" transparent="1" valign="center" zPosition="4"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="2560,1440" zPosition="-1"/>
+		<widget alphatest="blend" name="pic_loading" position="center,center" size="133,133" zPosition="3"/>
+		<widget font="Regular;53" halign="center" name="int_loading" position="center,center" size="107,107" transparent="1" valign="center" zPosition="4"/>
+		<widget font="Regular;53" halign="center" name="msg_loading" position="center,493" size="2400,107" transparent="1" valign="center" zPosition="4"/>
 		<widget backgroundColor="#9f1313" font="Regular;40" halign="center" position="13,7" render="Label" size="400,93" source="key_red" transparent="1" valign="center" zPosition="1"/>
 		<widget backgroundColor="#1f771f" font="Regular;40" halign="center" position="413,7" render="Label" size="400,93" source="key_green" transparent="1" valign="center" zPosition="1"/>
 		<widget backgroundColor="#a08500" font="Regular;40" halign="center" position="813,7" render="Label" size="400,93" source="key_yellow" transparent="1" valign="center" zPosition="1"/>

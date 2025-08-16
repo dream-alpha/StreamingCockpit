@@ -2,6 +2,6 @@
 		<xmlinc file="screenpart_TitleOnly" source="Title"/>
 		<xmlinc file="screenpart_Background"/>
 		<xmlinc file="screenpart_Loading"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.png" position="0,0" size="2560,1440" zPosition="-1"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="2560,1440" zPosition="-1"/>
 		<xmlinc file="screenpart_4Buttons_source" position="0,eval($screen_height-67)" width="eval($screen_width/$4)"/>
 	</screen>

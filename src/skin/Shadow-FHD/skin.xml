@@ -5,11 +5,10 @@
 		<ePixmap gradient="#ff000000,#131a1d,vertical" position="0,0" size="1920,486" zPosition="-1"/>
 		<eLabel backgroundColor="#131a1d" position="0,486" size="1920,108" zPosition="-1"/>
 		<ePixmap gradient="#131a1d,#ff000000,vertical" position="0,594" size="1920,486" zPosition="-1"/>
-		<widget backgroundColor="#000000" cornerRadius="300" name="background" position="center,center" size="576,432" zPosition="2"/>
-		<widget alphatest="blend" name="pic_loading" position="center,440" size="100,100" zPosition="3"/>
-		<widget font="Regular;40" halign="center" name="int_loading" position="center,440" size="80,80" transparent="1" valign="center" zPosition="4"/>
-		<widget font="Regular;40" halign="center" name="msg_loading" position="center,560" size="1920,80" transparent="1" valign="center" zPosition="4"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.png" position="0,0" size="1920,1080" zPosition="-1"/>
+		<widget alphatest="blend" name="pic_loading" position="center,center" size="100,100" zPosition="3"/>
+		<widget font="Regular;40" halign="center" name="int_loading" position="center,center" size="80,80" transparent="1" valign="center" zPosition="4"/>
+		<widget font="Regular;40" halign="center" name="msg_loading" position="center,600" size="1920,80" transparent="1" valign="center" zPosition="4"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="1920,1080" zPosition="-1"/>
 		<widget font="Regular;26" halign="center" position="0,1030" render="Label" size="480,35" source="key_red" transparent="1"/>
 		<widget font="Regular;26" halign="center" position="480,1030" render="Label" size="480,35" source="key_green" transparent="1"/>
 		<widget font="Regular;26" halign="center" position="960,1030" render="Label" size="480,35" source="key_yellow" transparent="1"/>

@@ -41,12 +41,9 @@ class Loading():
         self.activity_timer = eTimer()
         self.activity_timer_conn = self.activity_timer.timeout.connect(self.doActivityTimer)
         self.pic_index = 0
-        self.seconds = -1
         self.csel["pic_loading"] = Pixmap()
         self.csel["int_loading"] = Label()
         self.csel["msg_loading"] = Label()
-        self.csel["background"] = Label()
-        self.csel["background"].hide()
         self.pics = len(glob.glob(resolveFilename(SCOPE_PLUGINS, "Extensions/%s/skin/images/spinner/*.png" % PLUGIN)))
         logger.debug("self.pics: %s", self.pics)
 
@@ -58,7 +55,6 @@ class Loading():
         if self.seconds > -1:
             self.csel["int_loading"].setText("%2d" % seconds)
         self.csel["msg_loading"].setText(msg)
-        self.csel["background"].show()
         if self.summaries:
             self.summaries[0]["background"].instance.setPixmap(LoadPixmap(getSkinPath("skin_default/display_bg.png"), cached=False))
             self.summaries[0]["lcd_pic_loading"].setShowHideAnimation("")
@@ -70,7 +66,6 @@ class Loading():
         self.csel["pic_loading"].instance.setPixmap(gPixmapPtr())
         self.csel["int_loading"].instance.setText("")
         self.csel["msg_loading"].instance.setText(msg)
-        self.csel["background"].hide()
         if self.summaries:
             self.summaries[0]["background"].hide()
             self.summaries[0]["lcd_pic_loading"].hide()

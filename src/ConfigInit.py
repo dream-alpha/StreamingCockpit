@@ -18,9 +18,8 @@
 # <http://www.gnu.org/licenses/>.
 
 
-from Components.config import config, ConfigSelection, ConfigYesNo, ConfigDirectory, ConfigSubsection, ConfigNothing, NoSave
+from Components.config import config, ConfigSelection, ConfigDirectory, ConfigSubsection, ConfigNothing, NoSave
 from .Debug import logger, log_levels, initLogging
-from .__init__ import _
 
 
 class ConfigInit():
@@ -31,13 +30,7 @@ class ConfigInit():
         config.plugins.streamingcockpit.fake_entry = NoSave(ConfigNothing())
         config.plugins.streamingcockpit.debug_log_level = ConfigSelection(
             default="INFO", choices=list(log_levels.keys()))
-        config.plugins.streamingcockpit.askstopmovie = ConfigSelection(
-            default="quit", choices=[("quit", _("Do nothing")), ("ask", _("Ask user"))])
         config.plugins.streamingcockpit.movie_dir = ConfigDirectory(
             default="/media/hdd/movie")
-        config.plugins.streamingcockpit.movie_resume_at_last_pos = ConfigYesNo(
-            default=False)
-        config.plugins.streamingcockpit.movie_start_position = ConfigSelection(default="beginning", choices=[(
-            "beginning", _("beginning")), ("first_mark", _("first mark")), ("event_start", _("event start"))])
 
         initLogging()

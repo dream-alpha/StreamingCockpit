@@ -19,21 +19,18 @@
 
 
 import os
+import time
 from enigma import iPlayableService, eSize
 from Components.ActionMap import HelpableActionMap
 from Components.Pixmap import Pixmap
-from Components.config import config
 from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
 from Components.Sources.COCCurrentService import COCCurrentService
 from Screens.Screen import Screen
 from Screens.HelpMenu import HelpableScreen
-from Screens.MessageBox import MessageBox
-from Screens.InfoBarGenerics import InfoBarAudioSelection, InfoBarShowHide, InfoBarNotifications, Notifications, InfoBarSubtitleSupport
+from Screens.InfoBarGenerics import InfoBarAudioSelection, InfoBarShowHide, InfoBarNotifications, InfoBarSubtitleSupport
 from Tools.LoadPixmap import LoadPixmap
 from .Debug import logger
 from .__init__ import _
-from .CutList import CutList
-from .CutListUtils import ptsToSeconds, getCutListLast, getCutListFirst
 from .SkinUtils import getSkinName
 from .CockpitCueSheet import CockpitCueSheet
 from .CockpitPVRState import CockpitPVRState
@@ -41,6 +38,7 @@ from .CockpitSeek import CockpitSeek
 from .BoxUtils import getBoxType
 from .SkinUtils import getSkinPath
 from .ServiceUtils import getService
+from .DelayTimer import DelayTimer
 
 
 class CockpitPlayerSummary(Screen):
@@ -52,7 +50,7 @@ class CockpitPlayerSummary(Screen):
 
 class CockpitPlayer(
         Screen, HelpableScreen, InfoBarBase, InfoBarNotifications, InfoBarShowHide, InfoBarAudioSelection, InfoBarSubtitleSupport,
-        CockpitCueSheet, CockpitSeek, CockpitPVRState, CutList
+        CockpitCueSheet, CockpitSeek, CockpitPVRState
 ):
 
     ENABLE_RESUME_SUPPORT = False
@@ -65,6 +63,8 @@ class CockpitPlayer(
         self.showMovieInfoEPGPtr = showMovieInfoEPGPtr
         self.leave_on_eof = leave_on_eof
         self.stream = stream
+        self.show_state_pic = False
+        self.fast_winding_hint_message_showed = False
 
         self.allowPiP = False
         self.allowPiPSwap = False
@@ -80,7 +80,6 @@ class CockpitPlayer(
         InfoBarNotifications.__init__(self)
         InfoBarSubtitleSupport.__init__(self)
         CockpitCueSheet.__init__(self, service)
-        CutList.__init__(self)
 
         self["player_icon"] = Pixmap()
 
@@ -104,18 +103,19 @@ class CockpitPlayer(
             screen=self,
             eventmap={
                 iPlayableService.evStart: self.__serviceStarted,
+                iPlayableService.evEnd: self.__serviceEnded,
+                iPlayableService.evSOF: self.__serviceSOF,
+                iPlayableService.evEOF: self.__serviceEOF,
             }
         )
 
-        event_start = config_plugins_plugin.movie_start_position.value == "event_start"
+        event_start = False
+
         CockpitSeek.__init__(self, session, service, event_start,
                              recording_start_time, timeshift, service_center)
         CockpitPVRState.__init__(self)
 
         self.service_started = False
-        self.cut_list = []
-        self.resume_point = 0
-
         self.onShown.append(self.__onShown)
 
     def createSummary(self):
@@ -131,42 +131,19 @@ class CockpitPlayer(
 
     def __serviceStarted(self):
         logger.info("self.is_closing: %s", self.is_closing)
+        self.service_started = True
         self.hide()
 
-        if not self.service_started and not self.is_closing and hasattr(self, "config_plugins_plugin"):
-            self.service_started = True
-            self.downloadCuesheet()
-            if self.config_plugins_plugin.movie_resume_at_last_pos.value:
-                self.resume_point = getCutListLast(self.cut_list)
-                if self.resume_point > 0:
-                    seconds = ptsToSeconds(self.resume_point)
-                    logger.debug("resume_point: %s", seconds)
-                    Notifications.AddNotificationWithCallback(
-                        self.__serviceStartedCallback,
-                        MessageBox,
-                        _("Do you want to resume playback at position: ")
-                        + "%d:%02d:%02d"
-                        % (seconds // 3600, seconds % 3600 // 60, seconds % 60) + "?",
-                        timeout=10,
-                        type=MessageBox.TYPE_YESNO,
-                        default=False,
-                    )
-                else:
-                    self.__serviceStartedCallback(False)
-            else:
-                self.__serviceStartedCallback(False)
+    def __serviceEnded(self):
+        logger.info("...")
+        self.service_started = False
+        self.hide()
 
-    def __serviceStartedCallback(self, answer):
-        logger.info("answer: %s", answer)
-        if answer:
-            self.doSeek(self.resume_point)
-        else:
-            if self.config_plugins_plugin.movie_start_position.value == "first_mark":
-                self.doSeek(getCutListFirst(self.cut_list, config.recording.margin_before.value * 60))
-            if self.config_plugins_plugin.movie_start_position.value == "event_start":
-                self.skipToEventStart()
-            if self.config_plugins_plugin.movie_start_position.value == "beginning":
-                self.doSeek(0)
+    def __serviceSOF(self):
+        logger.info("...")
+
+    def __serviceEOF(self):
+        logger.info("...")
 
     def ok(self):
         if self.seekstate == self.SEEK_STATE_PLAY:
@@ -200,26 +177,66 @@ class CockpitPlayer(
 
     def leavePlayer(self):
         logger.info("...")
-        self.updateCutList(self.service.getPath(), last=self.getPosition())
         self.session.nav.stopService()
         self.close()
 
-    def playNextSection(self):
+    def parseFilename(self, service):
         logger.info("...")
-        service_path = self.service.getPath()
-        base_path = os.path.splitext(service_path)[0].split("_")[0]
-        index = int(os.path.splitext(service_path)[0].split("_")[-1]) + 1
-        service_path = "%s_%d.ts" % (base_path, index)
-        logger.info("service_path: %s", service_path)
-        self.service = getService(service_path, "PlutoTV - %s" % index)
+        parts = os.path.splitext(service.getPath())[0].split("_")
+        base_path = parts[0]
+        resolution = parts[1]
+        index = int(parts[2])
+        return base_path, resolution, index
+
+    def playSection(self, service_path):
+        logger.info("service_path: %s, file_size: %d", service_path, os.path.getsize(service_path))
+        self.service = getService(service_path, "PlutoTV")
         self.showPVRStatePic(False)
         self.pvr_state_dialog.hide()
         self.session.nav.playService(self.service)
 
-    def doEofInternal(self, playing):
+    def nextSection(self, base_path, index):
+        logger.info("...")
+        index += 1
+        for resolution in ["l", "h"]:
+            path = "%s_%s_%s.ts" % (base_path, resolution, index)
+            if os.path.exists(path):
+                break
+        else:
+            path = None
+        return path
+
+    def checkPlaying(self, service):
+        logger.info("...")
+        if not self.service_started:
+            logger.error("Restarting current service failed: %s", service.getPath())
+            self.doEofInternal(service)
+        else:
+            logger.info("service is playing: %s", service.getPath())
+
+    def startCurrentService(self, service):
+        logger.info("current service: %s", service.getPath())
+        self.session.nav.playService(service)
+        DelayTimer(500, self.checkPlaying, service)
+
+    def doEofInternal(self, playing=True):
         logger.info("playing: %s, self.execing: %s", playing, self.execing)
+        self.showPVRStatePic(False)
+        self.pvr_state_dialog.hide()
+
+        base_path, _resolution, index = self.parseFilename(self.service)
         if self.execing:
-            self.playNextSection()
+            # self.session.nav.stopService()
+            next_section = self.nextSection(base_path, index)
+            if next_section:
+                # logger.info("Playing next section: %s, created at: %d", next_section, int(os.path.getctime(next_section)))
+                logger.info("Time difference to now: %d", int(time.time()) - int(os.path.getctime(next_section)))
+                self.playSection(next_section)
+            else:
+                logger.warning("Next section does not exist, restarting current section.")
+                self.playpause()
+                self.service_started = False
+                self.startCurrentService(self.service)
 
     def showMovies(self):
         logger.info("...")

@@ -4,7 +4,7 @@
 		<ePixmap pixmap="Default-FHD/skin_default/buttons/yellow.svg" position="610,5" size="300,70"/>
 		<ePixmap pixmap="Default-FHD/skin_default/buttons/blue.svg" position="910,5" size="300,70"/>
 
-		<ePixmap position="0,0" size="1920,1080" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.png" zPosition="-1"/>
+		<ePixmap position="0,0" size="1920,1080" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" zPosition="-1"/>
 		<xmlinc file="screenpart_Loading"/>
 
 		<widget backgroundColor="#9f1313" font="Regular;30" halign="center" position="10,5" render="Label" size="300,70" source="key_red" transparent="1" valign="center" zPosition="1"/>
