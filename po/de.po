@@ -1,0 +1,57 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamingCockpit\n"
+"POT-Creation-Date: 2025-08-13 15:21+0200\n"
+"PO-Revision-Date: 2025-08-13 15:24+0200\n"
+"Last-Translator: dream-alpha\n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ../src\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "Infobar/Play"
+msgstr "Infobar/Play"
+
+msgid "Play/Pause"
+msgstr "Play/Pause"
+
+msgid "Stop playback"
+msgstr "Stopp"
+
+msgid "Skip forward"
+msgstr "Springe vorwärts"
+
+msgid "Skip backward"
+msgstr "Springe zurück"
+
+msgid "EPG Info"
+msgstr "EPG Info"
+
+msgid "Exit"
+msgstr "Verlassen"
+
+msgid "Playlist"
+msgstr "Playliste"
+
+msgid "Stream is empty"
+msgstr "Stream ist nicht verfügbar"
+
+msgid "Error occurred while playing back stream"
+msgstr "Fehler beim Playback"
+
+msgid "Channel selection"
+msgstr "Kanalauswahl"
+
+msgid "Starting playback..."
+msgstr "Playback startet gleich..."
+
+msgid "Stream PlutoTV"
+msgstr "Streame PlutoTV"
+
+msgid "End"
+msgstr "Ende"
