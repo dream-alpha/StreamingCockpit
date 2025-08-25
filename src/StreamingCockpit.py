@@ -20,7 +20,6 @@
 
 import os
 from Screens.Screen import Screen
-from Screens.ChoiceBox import ChoiceBox
 from Screens.MessageBox import MessageBox
 from Components.ActionMap import ActionMap
 from Components.config import config
@@ -31,27 +30,27 @@ from .ServiceUtils import getService
 from .CockpitPlayer import CockpitPlayer
 from .ServiceCenter import ServiceCenter
 from .SocketClient import SocketClient
-from .chroot_utils import mount_bind, start_ubuntu_plugin, stop_ubuntu_plugin
+from .ChannelSelection import ChannelSelection
+from .chroot_utils import start_ubuntu_plugin, stop_ubuntu_plugin, bind_media_to_chroot, unbind_media_from_chroot
 from .Loading import Loading
 from .__init__ import _
 
 
-class StreamingCockpit(Screen, SocketClient):
+class StreamingCockpit(Screen, ChannelSelection, SocketClient):
 
     def __init__(self, session):
         Screen.__init__(self, session)
+        ChannelSelection.__init__(self, session)
         self.skinName = "StreamingCockpit"
         SocketClient.__init__(self, port=5000, on_message=self.handle_message)
-        self.selection = 0
-        self.choices = []
-        self.playlist = []
+        self.channels_dict = {}
         self.last_service = self.session.nav.getCurrentlyPlayingServiceReference()
         self.session.nav.stopService()
         self.service_center = ServiceCenter([])
         self.loading = Loading(self, None)
         self.root = "/data/ubuntu"
-        self.movie_src = "/media/hdd/movie"
-        self.movie_dst = "/data/ubuntu/media/hdd/movie"
+        self.media_src = "/media"
+        self.media_dst = "/data/ubuntu/media"
 
         self["key_red"] = StaticText(_("Exit"))
         self["key_green"] = StaticText(_("Playlist"))
@@ -63,16 +62,13 @@ class StreamingCockpit(Screen, SocketClient):
             {
                 "EXIT": self.exit,
                 "RED": self.exit,
-                "GREEN": self.openChannelSelection
+                "GREEN": boundFunction(self.openChannelSelection, True)
             }
         )
 
         try:
-            # Make sure movie directory exists
-            if not os.path.exists(self.movie_dst):
-                os.makedirs(self.movie_dst)
-            # mount movie directory
-            mount_bind(self.movie_src, self.movie_dst)
+            # mount media directories
+            bind_media_to_chroot(self.root)
 
             # Start the streaming server in a chroot environment
             self.server_proc = start_ubuntu_plugin(self.root, "/root/plugins/streamingserver/main.py")
@@ -98,8 +94,8 @@ class StreamingCockpit(Screen, SocketClient):
         if command == "ready":
             self.sendCommand({"command": "get_playlist", "args": []})
         elif command == "get_playlist":
-            self.playlist = message.get("args", [{}])[0]
-            self.openChannelSelection()
+            self.channels_dict = message.get("args", [{}])[0]
+            self.openChannelSelection(True)
         elif command == "start":
             rec_file = message.get("args", ["", ""])[1]
             self.playMovie(rec_file)
@@ -127,29 +123,11 @@ class StreamingCockpit(Screen, SocketClient):
         logger.info("MessageBox answer: %s", answer)
         self.openChannelSelection()
 
-    def openChannelSelection(self):
-        self.choices = []
-        for channel in self.playlist:
-            logger.debug("channel: %s", channel)
-            self.choices.append((channel["display_name"], channel["channel_uri"]))
-        self.session.openWithCallback(
-            self.openChannelSelectionCallback,
-            ChoiceBox,
-            title=_("Channel selection"),
-            list=self.choices,
-            selection=self.selection,
-            titlebartext="StreamingCockpit" + " - " + ("PlutoTV"),
-            keys=[]
-        )
-
-    def openChannelSelectionCallback(self, selection):
-        logger.info("selection: %s", selection)
-        if selection:
-            self.selection = self.choices.index(selection)
-            channel_uri = selection[1]
-            rec_file = os.path.join(config.usage.default_path.value, "pluto.ts")
-            self.sendCommand({"command": "start", "args": [channel_uri, rec_file]})
-            self.loading.start(-1, _("Starting playback..."))
+    def zapChannel(self, channel_uri):
+        logger.info("channel_uri: %s", channel_uri)
+        rec_file = os.path.join(config.usage.default_path.value, "pluto.ts")
+        self.sendCommand({"command": "start", "args": [channel_uri, rec_file]})
+        self.loading.start(-1, _("Starting playback..."))
 
     def playMovie(self, rec_file):
         logger.info("rec_file: %s", rec_file)
@@ -176,6 +154,7 @@ class StreamingCockpit(Screen, SocketClient):
         self.close_connection()
         if hasattr(self, 'server_proc') and self.server_proc:
             stop_ubuntu_plugin(self.root, self.server_proc)
+            unbind_media_from_chroot(self.root)
 
         self.session.nav.playService(self.last_service)
         self.close_connection()

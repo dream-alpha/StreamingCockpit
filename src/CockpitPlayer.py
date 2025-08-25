@@ -38,7 +38,6 @@ from .CockpitSeek import CockpitSeek
 from .BoxUtils import getBoxType
 from .SkinUtils import getSkinPath
 from .ServiceUtils import getService
-from .DelayTimer import DelayTimer
 
 
 class CockpitPlayerSummary(Screen):
@@ -221,8 +220,6 @@ class CockpitPlayer(
         logger.info("playing: %s, self.execing: %s", playing, self.execing)
         self.alive_timer.stop()
         self.wait_timer.stop()
-        self.current_position = 0
-        self.last_position = 0
 
         self.showPVRStatePic(False)
         self.pvr_state_dialog.hide()
@@ -232,13 +229,21 @@ class CockpitPlayer(
             next_section = self.nextSection(base_path, index)
             if os.path.exists(next_section):
                 self.wait_timer.stop()
+                self.current_position = 0
+                self.last_position = 0
                 # logger.info("Playing next section: %s, created at: %d", next_section, int(os.path.getctime(next_section)))
                 logger.info("Time difference to now: %d", int(time.time()) - int(os.path.getctime(next_section)))
-                self.session.nav.stopService()
-                DelayTimer(50, self.playSection, next_section)
+                # self.session.nav.stopService()
+                # DelayTimer(50, self.playSection, next_section)
+                self.playSection(next_section)
             else:
-                logger.warning("Next section does not exist, waiting for new content.")
-                self.wait_timer.start(1000, True)
+                logger.warning("Next section does not exist, waiting for new section or continued playback.")
+                self.current_position = self.getSeekPosition()
+                if self.current_position > self.last_position:
+                    self.wait_timer.stop()
+                    self.start_alive_timer()
+                else:
+                    self.wait_timer.start(1000, True)
 
     def showMovies(self):
         logger.info("...")
