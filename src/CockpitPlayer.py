@@ -19,9 +19,9 @@
 
 
 import os
-import time
 from enigma import iPlayableService, eSize, eTimer
 from Components.ActionMap import HelpableActionMap
+from Components.config import config
 from Components.Pixmap import Pixmap
 from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
 from Components.Sources.COCCurrentService import COCCurrentService
@@ -56,21 +56,23 @@ class CockpitPlayer(
     ENABLE_RESUME_SUPPORT = False
     ALLOW_SUSPEND = True
 
-    def __init__(self, session, service, config_plugins_plugin, showMovieInfoEPGPtr=None, leave_on_eof=False, recording_start_time=0, timeshift=None, service_center=None, stream=False):
-        self.service = service
-        self.service_ext = os.path.splitext(self.service.getPath())[1]
+    def __init__(self, session, _service, config_plugins_plugin, showMovieInfoEPGPtr=None, leave_on_eof=False, recording_start_time=0, timeshift=None, rec_files=None, service_center=None, stream=False):
         self.config_plugins_plugin = config_plugins_plugin
         self.showMovieInfoEPGPtr = showMovieInfoEPGPtr
         self.leave_on_eof = leave_on_eof
         self.stream = stream
+        self.rec_files = [] if rec_files is None else rec_files
+        self.service = self.getNextService()
         self.show_state_pic = False
         self.fast_winding_hint_message_showed = False
         self.wait_timer = eTimer()
         self.wait_timer_conn = self.wait_timer.timeout.connect(self.doEofInternal)
         self.alive_timer = eTimer()
-        self.alive_timer_conn = self.alive_timer.timeout.connect(self.isAlive)
+        self.alive_timer_conn = self.alive_timer.timeout.connect(self.isPlaying)
         self.last_position = 0
         self.current_position = 0
+        self.section_index = -1
+        self.rec_dir = config.usage.default_path.value
 
         self.allowPiP = False
         self.allowPiPSwap = False
@@ -85,7 +87,7 @@ class CockpitPlayer(
         InfoBarAudioSelection.__init__(self)
         InfoBarNotifications.__init__(self)
         InfoBarSubtitleSupport.__init__(self)
-        CockpitCueSheet.__init__(self, service)
+        CockpitCueSheet.__init__(self, self.service)
 
         self["player_icon"] = Pixmap()
 
@@ -113,35 +115,39 @@ class CockpitPlayer(
         )
 
         event_start = False
-
-        CockpitSeek.__init__(self, session, service, event_start,
+        CockpitSeek.__init__(self, session, self.service, event_start,
                              recording_start_time, timeshift, service_center)
         CockpitPVRState.__init__(self)
 
         self.service_started = False
-        self.onShown.append(self.__onShown)
+        self.onLayoutFinish.append(self.__onLayoutFinish)
 
     def createSummary(self):
         return CockpitPlayerSummary
 
-    def __onShown(self):
-        logger.info("service_started: %s", self.service_started)
+    def __onLayoutFinish(self):
+        logger.info("...")
         player_icon = "streamer.svg" if self.stream else "player.svg"
         self["player_icon"].instance.setPixmap(LoadPixmap(getSkinPath(
             "images/" + player_icon), cached=True, size=eSize(60, 60)))
-        if not self.service_started:
-            logger.info("First show, starting service: %s", self.service.getPath())
-            self.session.nav.playService(self.service)
+        self.playSection(self.service)
+
+    def getNextService(self):
+        if self.rec_files:
+            _channel_uri, rec_file, self.section_index, _segment_index = self.rec_files.pop(0)
+            logger.info("rec_file: %s, section_index: %d", rec_file, self.section_index)
+            return getService(rec_file, "PlutoTV")
+        return None
 
     def __serviceStarted(self):
         logger.info("=" * 70)
         logger.info("service_path: %s", self.service.getPath())
-        write_log(self.service.getPath(), "none", "---", "---", msg="service-started")
-        self.service_started = True
+        # write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "service-started")
         self.hide()
         self.current_position = 0
         self.last_position = 0
         self.start_alive_timer()
+        self.service_started = True
 
     def start_alive_timer(self):
         self.alive_timer.start(1500)
@@ -160,7 +166,8 @@ class CockpitPlayer(
     def playpause(self):
         if self.seekstate == self.SEEK_STATE_PAUSE:
             # workaround for video freeze problem after pause
-            if self.service_ext == ".mp4" and not getBoxType().startswith("dream"):
+            service_ext = os.path.splitext(self.service.getPath())[1].lower()
+            if service_ext == ".mp4" and not getBoxType().startswith("dream"):
                 self.fast_winding_hint_message_showed = True
                 self.playpauseService()
                 self.showPVRStatePic(False)
@@ -190,41 +197,29 @@ class CockpitPlayer(
         self.session.nav.stopService()
         self.close()
 
-    def isAlive(self):
+    def isPlaying(self):
         self.current_position = self.getSeekPosition()
         logger.info("current_position: %d, last_position: %d", self.current_position, self.last_position)
         if self.current_position:
             if self.current_position == self.last_position:
                 logger.info("Playback stopped without eos event")
-                write_log(self.service.getPath(), "none", "---", "---", msg="no-eof-event")
+                write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "no-eof-event")
                 self.alive_timer.stop()
                 self.doEofInternal()
             else:
                 self.last_position = self.current_position
         else:
-            write_log(self.service.getPath(), "none", "---", "---", msg="position-0")
+            write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "position-0")
+            self.alive_timer.stop()
             self.doEofInternal()
 
-    def parseFilename(self, service):
-        logger.info("...")
-        parts = os.path.splitext(service.getPath())[0].split("_")
-        base_path = parts[0]
-        index = int(parts[1])
-        return base_path, index
-
-    def playSection(self, service_path):
+    def playSection(self, service):
+        service_path = service.getPath()
         logger.info("service_path: %s, file_size: %d", service_path, os.path.getsize(service_path))
-        write_log(service_path, "none", "---", "---", msg="play-section")
-        self.service = getService(service_path, "PlutoTV")
+        write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "play-section")
         self.showPVRStatePic(False)
         self.pvr_state_dialog.hide()
-        self.session.nav.playService(self.service)
-
-    def nextSection(self, base_path, index):
-        logger.info("...")
-        index += 1
-        path = "%s_%s.ts" % (base_path, index)
-        return path
+        self.session.nav.playService(service)
 
     def doEofInternal(self, playing=True):
         logger.info("playing: %s, self.execing: %s", playing, self.execing)
@@ -234,23 +229,18 @@ class CockpitPlayer(
 
         self.showPVRStatePic(False)
         self.pvr_state_dialog.hide()
+        self.hide()
 
-        base_path, index = self.parseFilename(self.service)
-        write_log(self.service.getPath(), "none", index, "---", msg="end-of-file")
+        write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "end-of-file")
 
-        if self.execing:
-            next_section = self.nextSection(base_path, index)
-            if os.path.exists(next_section):
-                self.wait_timer.stop()
-                self.current_position = 0
-                self.last_position = 0
-                logger.info("Time difference to now: %d", int(time.time()) - int(os.path.getctime(next_section)))
-                write_log(next_section, "none", index + 1, "---", msg="now-playing")
-                self.playSection(next_section)
-            else:
-                logger.warning("Next section does not exist, waiting for new section.")
-                write_log(os.path.basename(self.service.getPath()), "none", index, "---", msg="no-next-section")
-                self.wait_timer.start(5000, True)
+        service = self.getNextService()
+        if service:
+            self.service = service
+            self.playSection(service)
+        else:
+            logger.error("No recording files available, waiting...")
+            write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "no-next-section")
+            self.wait_timer.start(5000, True)
 
     def showMovies(self):
         logger.info("...")

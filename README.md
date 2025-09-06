@@ -12,7 +12,7 @@ StreamingCockpit is a DreamOS plugin for playback of IPTV live streams.
 
 ## Features
 - Plays back IPTV streams. The first release focuses on PlutoTV streams.
-- STC comprises 3 compnents: 
+- STC comprises 3 components:
 	- GUI frontend in python2
 	- Streaming server in python3
 	- Ubuntu chroot subsystem providing a python3 environment

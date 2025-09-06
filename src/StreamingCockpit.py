@@ -27,18 +27,21 @@ from Components.Sources.StaticText import StaticText
 from Tools.BoundFunction import boundFunction
 from .ConfigScreen import ConfigScreen
 from .Debug import logger
-from .ServiceUtils import getService
 from .CockpitPlayer import CockpitPlayer
 from .ServiceCenter import ServiceCenter
 from .SocketClient import SocketClient
 from .ChannelSelection import ChannelSelection
 from .chroot_utils import start_ubuntu_plugin, stop_ubuntu_plugin, bind_media_to_chroot, unbind_media_from_chroot
 from .Loading import Loading
-from .DelayTimer import DelayTimer
+from .BoxUtils import getBoxType
 from .__init__ import _
 
 
-BUFFERING = 4
+if getBoxType() == "dm9XX":
+    BUFFERING = 5
+else:
+    BUFFERING = 2
+
 
 class StreamingCockpit(Screen, ChannelSelection, SocketClient):
 
@@ -55,6 +58,8 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
         self.root = "/data/ubuntu"
         self.media_src = "/media"
         self.media_dst = self.root + self.media_src
+        self.first = True
+        self.rec_files = []
 
         self["key_red"] = StaticText(_("Exit"))
         self["key_green"] = StaticText(_("Playlist"))
@@ -87,7 +92,6 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
         logger.info("...")
         self.connect()  # Initialize the socket client connection
 
-
     def sendCommand(self, message):
         """Send command."""
         self.send_json(message)
@@ -99,19 +103,17 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
         if command == "ready":
             self.openChannelSelection(True)
         elif command == "start":
-            args = message.get("args", ["", "", ""])
-            rec_file = args[1]
-            segment_index = args[2]
-            if segment_index <= BUFFERING:
-                self.loading.setSeconds(BUFFERING - segment_index)
-            elif segment_index == BUFFERING + 1:
-                self.loading.stop()
-                DelayTimer(50, self.playMovie, rec_file)
+            args = tuple(message.get("args", ["", "", "", ""]))
+            _channel_uri, _rec_file, _section_index, segment_index = args
+            if segment_index == BUFFERING or segment_index == -1:
+                self.rec_files.append(args)
+                if self.first:
+                    self.first = False
+                    self.loading.stop()
+                    self.playMovie()
         elif command == "stop":
-            args = message.get("args", ["", "", ""])
-            reason = args[0]
-            channel = args[1]
-            rec_file = args[2]
+            args = tuple(message.get("args", ["", "", ""]))
+            reason, channel, _rec_file = args
             if reason == "error":
                 self.loading.stop()
                 logger.error("Error occurred while playing back channel: %s", channel)
@@ -133,24 +135,26 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
         self.sendCommand({"command": "start", "args": [channel_uri, rec_file, config.plugins.streamingcockpit.show_ads.value]})
         self.loading.start(-1, _("Starting playback..."))
 
-    def playMovie(self, rec_file):
-        logger.info("rec_file: %s", rec_file)
-        service = getService(rec_file)
-        self.session.openWithCallback(boundFunction(self.playMovieCallback, rec_file),
+    def playMovie(self):
+        logger.info("...")
+        self.session.openWithCallback(self.playMovieCallback,
                                       CockpitPlayer,
-                                      service,
+                                      None,
                                       config.plugins.streamingcockpit,
                                       self.showInfo,
+                                      rec_files=self.rec_files,
                                       service_center=self.service_center,
                                       stream=False)
 
     def showInfo(self):
         return
 
-    def playMovieCallback(self, path):
-        logger.info("path: %s", path)
+    def playMovieCallback(self):
+        logger.info("...")
         self.sendCommand({"command": "stop", "args": []})
         self.loading.stop()
+        self.first = True
+        self.rec_files = []
         self.openChannelSelection()
 
     def showSettings(self):
@@ -169,5 +173,4 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
             unbind_media_from_chroot(self.root)
 
         self.session.nav.playService(self.last_service)
-        self.close_connection()
         self.close()
