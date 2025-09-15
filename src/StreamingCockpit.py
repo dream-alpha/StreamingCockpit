@@ -1,0 +1,180 @@
+# coding=utf-8
+#
+# Copyright (C) 2018-2025 by dream-alpha
+#
+# In case of reuse of this source code please do not remove this copyright.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# For more information on the GNU General Public License see:
+# <http://www.gnu.org/licenses/>.
+
+
+import os
+from Screens.Screen import Screen
+from Screens.MessageBox import MessageBox
+from Components.ActionMap import ActionMap
+from Components.config import config
+from Components.Sources.StaticText import StaticText
+from Tools.BoundFunction import boundFunction
+from .ConfigScreen import ConfigScreen
+from .Debug import logger
+from .CockpitPlayer import CockpitPlayer
+from .ServiceCenter import ServiceCenter
+from .SocketClient import SocketClient
+from .ChannelSelection import ChannelSelection
+from .chroot_utils import start_ubuntu_plugin, stop_ubuntu_plugin, bind_media_to_chroot, unbind_media_from_chroot, umount_chroot
+from .Loading import Loading
+from .BoxUtils import getBoxType
+from .DelayTimer import DelayTimer
+from .__init__ import _
+
+
+if not getBoxType().startswith("dream"):  # DM9XX
+    BUFFERING = 5
+else:
+    BUFFERING = 2
+
+
+class StreamingCockpit(Screen, ChannelSelection, SocketClient):
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        ChannelSelection.__init__(self, session)
+        self.skinName = "StreamingCockpit"
+        SocketClient.__init__(self, port=5000, on_message=self.handle_message)
+        self.channels_dict = {}
+        self.last_service = self.session.nav.getCurrentlyPlayingServiceReference()
+        self.session.nav.stopService()
+        self.service_center = ServiceCenter([])
+        self.loading = Loading(self, None)
+        self.root = "/data/ubuntu"
+        self.media_src = "/media"
+        self.media_dst = self.root + self.media_src
+        self.first = True
+        self.rec_files = []
+
+        self["key_red"] = StaticText(_("Exit"))
+        self["key_green"] = StaticText(_("Playlist"))
+        self["key_yellow"] = StaticText()
+        self["key_blue"] = StaticText(_("Settings"))
+
+        self["actions"] = ActionMap(
+            ["CockpitActions"],
+            {
+                "MENU": self.showSettings,
+                "EXIT": self.exit,
+                "RED": self.exit,
+                "GREEN": boundFunction(self.openChannelSelection, True),
+                "BLUE": self.showSettings
+            }
+        )
+
+        self.onFirstExecBegin.append(self.__startServer)
+        self.onLayoutFinish.append(self.__onLayoutFinish)
+
+    def __startServer(self):
+        try:
+            # mount media directories
+            bind_media_to_chroot(self.root)
+            # Start the streaming server in a chroot environment
+            self.server_proc = start_ubuntu_plugin(self.root, "/root/plugins/streamingserver/main.py")
+            logger.info("Started streamingserver.py in chroot /data/ubuntu using venv")
+        except Exception as e:
+            logger.error("Failed to start streamingserver.py in chroot with venv: %s", e)
+
+    def __onLayoutFinish(self):
+        logger.info("...")
+        self.connect()  # Initialize the socket client connection
+
+    def sendCommand(self, message):
+        """Send command."""
+        self.send_json(message)
+
+    def handle_message(self, message):
+        """Handle incoming messages from the server."""
+        logger.info("Received message: %s", message)
+        command = message.get("command", "None")
+        if command == "ready":
+            self.openChannelSelection(True)
+        elif command == "start":
+            args = tuple(message.get("args", ["", "", "", ""]))
+            _channel_uri, _rec_file, _section_index, segment_index = args
+            if segment_index == BUFFERING or segment_index == -1:
+                self.rec_files.append(args)
+                if self.first:
+                    self.first = False
+                    self.loading.stop()
+                    self.playMovie()
+        elif command == "stop":
+            args = tuple(message.get("args", ["", "", ""]))
+            reason, channel, _rec_file = args
+            if reason == "error":
+                self.loading.stop()
+                logger.error("Error occurred while playing back channel: %s", channel)
+                self.session.openWithCallback(self.MessageBoxCallback, MessageBox, _("Error occurred while playing back stream"), MessageBox.TYPE_ERROR)
+            else:
+                self.loading.stop()
+                logger.info("Stopping playback for channel: %s", channel)
+        else:
+            logger.warning("Unknown command received: %s", command)
+
+    def MessageBoxCallback(self, answer):
+        """Callback for MessageBox."""
+        logger.info("MessageBox answer: %s", answer)
+        self.openChannelSelection()
+
+    def zapChannel(self, channel_uri):
+        logger.info("channel_uri: %s", channel_uri)
+        rec_dir = os.path.normpath(config.usage.default_path.value)
+        self.sendCommand({"command": "start", "args": [channel_uri, rec_dir, config.plugins.streamingcockpit.show_ads.value, BUFFERING]})
+        self.loading.start(-1, _("Starting playback..."))
+
+    def playMovie(self):
+        logger.info("...")
+        self.session.openWithCallback(self.playMovieCallback,
+                                      CockpitPlayer,
+                                      None,
+                                      config.plugins.streamingcockpit,
+                                      self.showInfo,
+                                      rec_files=self.rec_files,
+                                      service_center=self.service_center,
+                                      stream=False)
+
+    def showInfo(self):
+        return
+
+    def playMovieCallback(self):
+        logger.info("...")
+        self.sendCommand({"command": "stop", "args": []})
+        self.loading.stop()
+        self.first = True
+        self.rec_files = []
+        self.openChannelSelection()
+
+    def showSettings(self):
+        logger.info("...")
+        self.session.openWithCallback(
+            self.showSettingsCallback, ConfigScreen, config.plugins.streamingcockpit)
+
+    def showSettingsCallback(self, _changed=None):
+        pass
+
+    def exit(self):
+        logger.info("...")
+        self.close_connection()
+        if hasattr(self, 'server_proc') and self.server_proc:
+            stop_ubuntu_plugin(self.root, self.server_proc)
+            unbind_media_from_chroot(self.root)
+            DelayTimer(100, umount_chroot, self.root)
+
+        self.session.nav.playService(self.last_service)
+        self.close()
