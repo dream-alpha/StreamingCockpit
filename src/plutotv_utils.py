@@ -18,87 +18,62 @@
 # <http://www.gnu.org/licenses>.
 
 
-import uuid
 import json
 import datetime
-import urllib
 import os
-import urlparse
 from .Debug import logger
 
-
-CHANNEL_EPG_CACHE = "/etc/enigma2/plutotv-channel-epg-cache.json"
-
-
-def get_url(channel):
-    stitched_url = channel["stitched"]["urls"][0]["url"]
-    parsed_url = urlparse.urlparse(stitched_url)
-    params = urlparse.parse_qs(parsed_url.query)
-
-    # Update existing parameters or add new ones
-    device_id = str(uuid.uuid1())
-    sid = str(uuid.uuid4())
-    params.update(
-        {
-            "advertisingId": [""],
-            "appName": ["web"],
-            "appVersion": ["unknown"],
-            "appStoreUrl": [""],
-            "architecture": [""],
-            "buildVersion": [""],
-            "clientTime": ["0"],
-            "deviceDNT": ["0"],
-            "deviceId": [device_id],
-            "deviceMake": ["Chrome"],
-            "deviceModel": ["web"],
-            "deviceType": ["web"],
-            "deviceVersion": ["unknown"],
-            "includeExtendedEvents": ["false"],
-            "sid": [sid],
-            "userId": [""],
-            "serverSideAds": ["true"],
-        }
-    )
-
-    query = urllib.urlencode(params, doseq=True)
-    updated_url = urlparse.urlunparse((
-        parsed_url.scheme,
-        parsed_url.netloc,
-        parsed_url.path,
-        parsed_url.params,
-        query,
-        parsed_url.fragment
-    ))
-    return updated_url
+ID = "UVP"
 
 
-def get_channels_dict():
+DATA_DIR = "/etc/enigma2" + "/" + ID
+CHANNELS_FILE = os.path.join(DATA_DIR, "%s/channels.json")
+CATEGORIES_FILE = os.path.join(DATA_DIR, "%s/categories.json")
+
+
+def get_providers():
     """
-    Returns a dictionary of channels from the PlutoTV API.
+    Returns a list of providers.
     """
-    logger.info("Reading channels dict...")
-    if os.path.exists(CHANNEL_EPG_CACHE):
-        with open(CHANNEL_EPG_CACHE, "r") as f:
-            channels_dict = json.load(f)
-        return channels_dict
-    logger.error("Cache file not found.")
-    return {"slugs": {}, "categories": {}}
+    logger.info("Fetching providers")
+    with open('/etc/enigma2/UVP/providers.json', 'r') as f:
+        providers = json.load(f)
+    return providers
+
+
+def get_categories(provider):
+    """
+    Returns a list of categories.
+    """
+    logger.info("Fetching categories for provider: %s", provider)
+    with open(CATEGORIES_FILE % provider["path"], 'r') as f:
+        categories = json.load(f)
+    return categories
+
+
+def get_channels(provider, category):
+    """
+    Returns a list of channels.
+    """
+    logger.info("Fetching channels for provider: %s, category: %s", provider, category)
+    with open(CHANNELS_FILE % provider["path"], 'r') as f:
+        channels = json.load(f)
+    return channels[category["name"]]
 
 
 def parse_iso8601(dtstr):
-    # Python 2 doesn't have fromisoformat, so parse manually
     try:
         return datetime.datetime.strptime(dtstr[:19], "%Y-%m-%dT%H:%M:%S")
     except Exception:
         return None
 
 
-def get_current_epg(slug):
+def get_current_epg(channel):
     """
-    Return the current EPG entry for a PlutoTV channel slug, or None if not found.
+    Return the current EPG entry for a PlutoTV channel, or None if not found.
     """
     now = datetime.datetime.utcnow()
-    timelines = slug.get("timelines")
+    timelines = channel.get("timelines")
     if timelines:
         for programme in timelines:
             logger.info("programme: %s", programme)
@@ -109,21 +84,19 @@ def get_current_epg(slug):
     return None
 
 
-def get_upcoming_epg(slug, limit=10):
+def get_upcoming_epg(channel):
     """
-    Return a list of upcoming EPG entries for a PlutoTV channel slug.
+    Return a list of upcoming EPG entries for a PlutoTV channel.
     Each entry is a dict from the channel's 'timelines'.
     """
-    logger.info("Fetching upcoming EPG for slug: %s", slug)
+    logger.info("Fetching upcoming EPG for channel: %s", channel)
     now = datetime.datetime.utcnow()
-    timelines = slug.get("timelines")
+    timelines = channel.get("timelines")
     if timelines:
         upcoming = []
         for programme in timelines:
             start = parse_iso8601(programme["start"])
             if start and start >= now:
                 upcoming.append(programme)
-                if len(upcoming) >= limit:
-                    break
         return upcoming
     return []

@@ -140,14 +140,16 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
 
     def playMovie(self):
         logger.info("...")
-        self.session.openWithCallback(self.playMovieCallback,
-                                      CockpitPlayer,
-                                      None,
-                                      config.plugins.streamingcockpit,
-                                      self.showInfo,
-                                      rec_files=self.rec_files,
-                                      service_center=self.service_center,
-                                      stream=False)
+        self.session.openWithCallback(
+            self.playMovieCallback,
+            CockpitPlayer,
+            None,
+            config.plugins.streamingcockpit,
+            self.showInfo,
+            rec_files=self.rec_files,
+            service_center=self.service_center,
+            stream=False
+        )
 
     def showInfo(self):
         return

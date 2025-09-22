@@ -21,7 +21,7 @@
 from Screens.ChoiceBox import ChoiceBox
 from Components.config import config
 from .Debug import logger
-from .plutotv_utils import get_current_epg, get_channels_dict, get_url
+from .plutotv_utils import get_current_epg, get_channels, get_categories, get_providers
 from .__init__ import _
 
 
@@ -30,32 +30,36 @@ class ChannelSelection:
         self.session = session
         self.selection_level = 0
         self.selection_0_index = 0
-        self.selection_0_key = ""
         self.selection_1_index = 0
         self.choices = []
-        self.channels_dict = {"slugs": {}, "categories": {}}
 
     def create_choices(self):
         self.choices = []
-        if self.selection_level == 0:
-            # logger.info("channels_dict: %s", self.channels_dict)
-            categories = self.channels_dict.get("categories", {})
-            logger.info("Categories: %s", categories)
-            for category in sorted(categories):
-                self.choices.append((str(category), str(category)))
+        providers = get_providers()
+        for provider in providers:
+            logger.info("provider: %s", provider)
+            if provider["name"] == "PlutoTV":
+                break
         else:
-            channels = self.channels_dict.get("categories", {}).get(self.selection_0_key, [])
-            slugs = self.channels_dict.get("slugs", {})
+            logger.error("PlutoTV provider not found")
+            provider = None
+        logger.info("Using provider: %s", provider)
+
+        categories = get_categories(provider)
+        logger.info("Categories: %s", categories)
+
+        if self.selection_level == 0:
+            for category in categories:
+                self.choices.append((str(category["name"]), str(category["name"])))
+        else:
+            channels = get_channels(provider, categories[self.selection_0_index])
             for channel in channels:
                 logger.info("channel: %s", channel)
-                slug = slugs.get(channel, {})
-                # logger.info("slug: %s", slug)
-                # programme name
-                name = slug.get("name", "n/a")
+                name = channel.get("name", "n/a")
                 if name.startswith("Pluto TV "):
                     name = name.replace("Pluto TV ", "")
                 # programme epg
-                programme = get_current_epg(slug)
+                programme = get_current_epg(channel)
                 if programme:
                     title = programme.get("title", "")
                     if title.lower().startswith(name.lower()):
@@ -65,19 +69,17 @@ class ChannelSelection:
                     if title:
                         name = "%s - %s" % (name, title)
                 # stream url
-                url = get_url(slug)
+                url = channel["url"]
                 self.choices.append((str(name), str(url)))
                 self.choices.sort(key=lambda x: x[0])
         logger.info("choices: %s", self.choices)
         return self.choices
 
     def openChannelSelection(self, first=False):
-        self.channels_dict = get_channels_dict()
         logger.debug("...")
         if first:
             self.selection_level = int(config.plugins.streamingcockpit.selection_level.value)
             self.selection_0_index = int(config.plugins.streamingcockpit.selection_0_index.value)
-            self.selection_0_key = config.plugins.streamingcockpit.selection_0_key.value
             self.selection_1_index = int(config.plugins.streamingcockpit.selection_1_index.value)
 
         title = _("PlutoTV - Categories") if self.selection_level == 0 else _("PlutoTV - Channels")
@@ -101,7 +103,6 @@ class ChannelSelection:
         if selection:
             if self.selection_level == 0:
                 self.selection_0_index = self.choices.index(selection)
-                self.selection_0_key = selection[1]
                 self.selection_level = 1
                 self.openChannelSelection()
             else:
@@ -112,7 +113,6 @@ class ChannelSelection:
                 config.plugins.streamingcockpit.selection_level.value = self.selection_level
                 config.plugins.streamingcockpit.selection_0_index.value = self.selection_0_index
                 config.plugins.streamingcockpit.selection_1_index.value = self.selection_1_index
-                config.plugins.streamingcockpit.selection_0_key.value = self.selection_0_key
                 config.plugins.streamingcockpit.save()
         elif self.selection_level == 1:
             self.selection_level = 0

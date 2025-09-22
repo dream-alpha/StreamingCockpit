@@ -32,7 +32,6 @@ class ConfigInit():
         config.plugins.streamingcockpit.selection_level = ConfigInteger(default=0)
         config.plugins.streamingcockpit.selection_0_index = ConfigInteger(default=0)
         config.plugins.streamingcockpit.selection_1_index = ConfigInteger(default=0)
-        config.plugins.streamingcockpit.selection_0_key = ConfigText(default="")
         config.plugins.streamingcockpit.show_ads = ConfigYesNo(default=False)
 
         initLogging()
