@@ -17,150 +17,193 @@
 # For more information on the GNU General Public License see:
 # <http://www.gnu.org/licenses/>.
 
-
-import os
 from Screens.Screen import Screen
-from Screens.MessageBox import MessageBox
 from Components.ActionMap import ActionMap
 from Components.config import config
-from Components.Sources.StaticText import StaticText
+from Components.Label import Label
 from Tools.BoundFunction import boundFunction
+from .MediaList import MediaEntryComponent, MediaList
+from .SocketClientHandler import SocketClientHandler
 from .ConfigScreen import ConfigScreen
 from .Debug import logger
-from .CockpitPlayer import CockpitPlayer
-from .ServiceCenter import ServiceCenter
-from .SocketClient import SocketClient
-from .ChannelSelection import ChannelSelection
-from .chroot_utils import start_ubuntu_plugin, stop_ubuntu_plugin, bind_media_to_chroot, unbind_media_from_chroot, umount_chroot
-from .Loading import Loading
-from .BoxUtils import getBoxType
-from .DelayTimer import DelayTimer
 from .__init__ import _
 
 
-if not getBoxType().startswith("dream"):  # DM9XX
-    BUFFERING = 5
-else:
-    BUFFERING = 2
+class StreamingCockpitSummary(Screen, object):
+    pass
 
 
-class StreamingCockpit(Screen, ChannelSelection, SocketClient):
-
-    def __init__(self, session):
+class StreamingCockpit(SocketClientHandler, Screen, object):
+    def __init__(self, session, level, media=None, socket_client=None, provider=None):
+        self.socket_client = socket_client
+        self.level = level
+        logger.info("Opening level: %d", self.level)
+        self.media = media
+        self.providers = None
+        self.provider = provider
+        self.categories = None
+        self.channels = None
+        self.channel = None
         Screen.__init__(self, session)
-        ChannelSelection.__init__(self, session)
         self.skinName = "StreamingCockpit"
-        SocketClient.__init__(self, port=5000, on_message=self.handle_message)
-        self.channels_dict = {}
-        self.last_service = self.session.nav.getCurrentlyPlayingServiceReference()
-        self.session.nav.stopService()
-        self.service_center = ServiceCenter([])
-        self.loading = Loading(self, None)
-        self.root = "/data/ubuntu"
-        self.media_src = "/media"
-        self.media_dst = self.root + self.media_src
-        self.first = True
-        self.rec_files = []
+        SocketClientHandler.__init__(self, session, socket_client)
 
-        self["key_red"] = StaticText(_("Exit"))
-        self["key_green"] = StaticText(_("Playlist"))
-        self["key_yellow"] = StaticText()
-        self["key_blue"] = StaticText(_("Settings"))
+        labels_red = [
+            _("Exit"),
+            _("Exit"),
+            _("Exit"),
+        ]
+        self["red"] = Label()
+        self["red"].setText(labels_red[level])
+
+        labels_green = [
+            "",
+            "",
+            "",
+        ]
+        self["green"] = Label()
+        self["green"].setText(labels_green[level])
+
+        labels_blue = [
+            _("Settings"),
+            _("Settings"),
+            _("Settings"),
+        ]
+        self["blue"] = Label()
+        self["blue"].setText(labels_blue[level])
+
+        labels_yellow = [
+            "",
+            "",
+            "",
+        ]
+        self["yellow"] = Label()
+        self["yellow"].setText(labels_yellow[level])
+
+        headers = [
+            _("Providers"),
+            _("Categories"),
+            _("Channels"),
+        ]
+        self.headers = headers
+        self["header"] = Label()
+        self["header"].setText(headers[level])
+
+        self.max_level = len(headers) - 1
+
+        self["medialist"] = MediaList([])
+
+        actions = [
+            {
+                "GREEN": None,
+                "YELLOW": None,
+                "BLUE": self.showSettings,
+            },
+            {
+                "GREEN": None,
+                "YELLOW": None,
+                "BLUE": self.showSettings,
+            },
+            {
+                "GREEN": None,
+                "YELLOW": None,
+                "BLUE": self.showSettings,
+            },
+        ]
+        action_map = {
+            "OK": self.handleSelection,
+            "EXIT": boundFunction(self.close, False),
+            "RED": boundFunction(self.close, True)
+        }
+        merged_actions = action_map.copy()
+        merged_actions.update(actions[level])
 
         self["actions"] = ActionMap(
             ["CockpitActions"],
-            {
-                "MENU": self.showSettings,
-                "EXIT": self.exit,
-                "RED": self.exit,
-                "GREEN": boundFunction(self.openChannelSelection, True),
-                "BLUE": self.showSettings
-            }
+            merged_actions
         )
 
-        self.onFirstExecBegin.append(self.__startServer)
-        self.onLayoutFinish.append(self.__onLayoutFinish)
+        self.onLayoutFinish.append(self.layoutFinished)
 
-    def __startServer(self):
-        try:
-            # mount media directories
-            bind_media_to_chroot(self.root)
-            # Start the streaming server in a chroot environment
-            self.server_proc = start_ubuntu_plugin(self.root, "/root/plugins/streamingserver/main.py")
-            logger.info("Started streamingserver.py in chroot /data/ubuntu using venv")
-        except Exception as e:
-            logger.error("Failed to start streamingserver.py in chroot with venv: %s", e)
-
-    def __onLayoutFinish(self):
-        logger.info("...")
-        self.connect()  # Initialize the socket client connection
-
-    def sendCommand(self, message):
-        """Send command."""
-        self.send_json(message)
-
-    def handle_message(self, message):
-        """Handle incoming messages from the server."""
-        logger.info("Received message: %s", message)
-        command = message.get("command", "None")
-        if command == "ready":
-            self.openChannelSelection(True)
-        elif command == "start":
-            args = tuple(message.get("args", ["", "", "", ""]))
-            _channel_uri, _rec_file, _section_index, segment_index = args
-            if segment_index == BUFFERING or segment_index == -1:
-                self.rec_files.append(args)
-                if self.first:
-                    self.first = False
-                    self.loading.stop()
-                    self.playMovie()
-        elif command == "stop":
-            args = tuple(message.get("args", ["", "", ""]))
-            reason, channel, _rec_file = args
-            if reason == "error":
-                self.loading.stop()
-                logger.error("Error occurred while playing back channel: %s", channel)
-                self.session.openWithCallback(self.MessageBoxCallback, MessageBox, _("Error occurred while playing back stream"), MessageBox.TYPE_ERROR)
-            else:
-                self.loading.stop()
-                logger.info("Stopping playback for channel: %s", channel)
+    def layoutFinished(self):
+        logger.info("Layout finished")
+        self["header"].setText(_("Loading") + " " + self.headers[self.level] + "...")
+        self["medialist"].hide()
+        if self.level == 0:
+            logger.info("Waiting for server to be ready...")
         else:
-            logger.warning("Unknown command received: %s", command)
+            self.getMediaList()
 
-    def MessageBoxCallback(self, answer):
-        """Callback for MessageBox."""
-        logger.info("MessageBox answer: %s", answer)
-        self.openChannelSelection()
+    def serverIsReady(self):
+        logger.info("Server is ready")
+        self.getMediaList()
 
-    def zapChannel(self, channel_uri):
-        logger.info("channel_uri: %s", channel_uri)
-        rec_dir = os.path.normpath(config.usage.default_path.value)
-        self.sendCommand({"command": "start", "args": [channel_uri, rec_dir, config.plugins.streamingcockpit.show_ads.value, BUFFERING]})
-        self.loading.start(-1, _("Starting playback..."))
+    def handleSelection(self):
+        current = self["medialist"].getCurrent()
+        if current is not None:
+            media = current[0]
+            media_index = self["medialist"].getIndex()
+            getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).value = media_index
+            getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).save()
 
-    def playMovie(self):
-        logger.info("...")
-        self.session.openWithCallback(
-            self.playMovieCallback,
-            CockpitPlayer,
-            None,
-            config.plugins.streamingcockpit,
-            self.showInfo,
-            rec_files=self.rec_files,
-            service_center=self.service_center,
-            stream=False
-        )
+            if self.level == 0:
+                self.provider = media
 
-    def showInfo(self):
-        return
+            if self.level < self.max_level:
+                logger.info("Selected media: %s", media)
+                self.session.openWithCallback(
+                    self.StreamingCockpitCallback,
+                    StreamingCockpit,
+                    self.level + 1,
+                    media,
+                    self.socket_client,
+                    self.provider
+                )
+            else:
+                logger.debug("Final selection reached: %s", media)
+                self.channel = media
+                url = media.get("url", None)
+                self.startMovie(url)
 
-    def playMovieCallback(self):
-        logger.info("...")
-        self.sendCommand({"command": "stop", "args": []})
-        self.loading.stop()
-        self.first = True
-        self.rec_files = []
-        self.openChannelSelection()
+    def StreamingCockpitCallback(self, leave):
+        logger.info("quit: %s", leave)
+        if leave:
+            self.close(True)
+
+    def getMediaList(self):
+        logger.info("Loading media list for level %d", self.level)
+        medialist = []
+        try:
+            if self.level == 0:
+                if self.providers is None:
+                    self.requestMediaList()
+                else:
+                    self.updateMediaList(self.providers)
+            elif self.level == 1:
+                if self.categories is None:
+                    self.requestMediaList(provider=self.provider)
+                else:
+                    self.updateMediaList(self.categories)
+                logger.debug("Categories: %s", medialist)
+            elif self.level == 2:
+                if self.channels is None:
+                    self.requestMediaList(provider=self.provider, category=self.media)
+                else:
+                    self.updateMediaList(self.channels)
+                logger.debug("Channels: %s", medialist)
+        except Exception as e:
+            logger.error("Failed to load media list: %s", e)
+
+    def updateMediaList(self, medialist):
+        # logger.info("Media list: %s", medialist)
+        alist = []
+        if medialist:
+            alist = [MediaEntryComponent(media) for media in medialist]
+        self["medialist"].setList(alist)
+        media_index = getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).value
+        self["medialist"].setIndex(media_index)
+        self["medialist"].show()
+        self["header"].setText(self.headers[self.level])
 
     def showSettings(self):
         logger.info("...")
@@ -170,13 +213,5 @@ class StreamingCockpit(Screen, ChannelSelection, SocketClient):
     def showSettingsCallback(self, _changed=None):
         pass
 
-    def exit(self):
-        logger.info("...")
-        self.close_connection()
-        if hasattr(self, 'server_proc') and self.server_proc:
-            stop_ubuntu_plugin(self.root, self.server_proc)
-            unbind_media_from_chroot(self.root)
-            DelayTimer(100, umount_chroot, self.root)
-
-        self.session.nav.playService(self.last_service)
-        self.close()
+    def createSummary(self):
+        return StreamingCockpitSummary

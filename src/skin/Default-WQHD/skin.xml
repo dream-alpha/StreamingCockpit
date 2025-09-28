@@ -1,22 +1,26 @@
 <?xml version="1.0" ?>
 <skin>
-	<screen flags="wfNoBorder" name="StreamingCockpit" position="0,0" size="2560,1440" title="StreamingCockpit">
-		<widget font="Bold;43" noWrap="1" position="27,40" render="Label" size="2507,57" source="Title" transparent="1"/>
+	<screen backgroundColor="background" flags="wfNoBorder" name="StreamingCockpit" position="center,center" size="2560,1440" title="Streaming Cockpit">
 		<ePixmap gradient="#ff000000,#131a1d,vertical" position="0,0" size="2560,648" zPosition="-1"/>
 		<eLabel backgroundColor="#131a1d" position="0,648" size="2560,144" zPosition="-1"/>
 		<ePixmap gradient="#131a1d,#ff000000,vertical" position="0,792" size="2560,648" zPosition="-1"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/plugin_selection.png" position="33,20" size="93,93"/>
+		<widget font="Bold;43" noWrap="1" position="173,40" render="Label" size="2327,53" source="Title" transparent="1"/>
 		<widget alphatest="blend" name="pic_loading" position="center,center" size="133,133" zPosition="3"/>
 		<widget font="Regular;53" halign="center" name="int_loading" position="center,center" size="107,107" transparent="1" valign="center" zPosition="4"/>
 		<widget font="Regular;53" halign="center" name="msg_loading" position="center,560" size="2560,107" transparent="1" valign="center" zPosition="4"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="2560,1440" zPosition="-1"/>
-		<widget font="Regular;35" halign="center" position="0,1373" render="Label" size="640,47" source="key_red" transparent="1"/>
-		<widget font="Regular;35" halign="center" position="640,1373" render="Label" size="640,47" source="key_green" transparent="1"/>
-		<widget font="Regular;35" halign="center" position="1280,1373" render="Label" size="640,47" source="key_yellow" transparent="1"/>
-		<widget font="Regular;35" halign="center" position="1920,1373" render="Label" size="640,47" source="key_blue" transparent="1"/>
-		<eLabel backgroundColor="#ff0000" position="0,1426" size="640,13"/>
-		<eLabel backgroundColor="#669900" position="640,1426" size="640,13"/>
-		<eLabel backgroundColor="#e5b243" position="1280,1426" size="640,13"/>
-		<eLabel backgroundColor="#3366cc" position="1920,1426" size="640,13"/>
+		<widget font="Regular;37" halign="left" name="header" position="33,120" size="2507,57" transparent="1" valign="center"/>
+		<widget backgroundPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/grid.svg" enableWrapAround="1" margin="40,40" mode="grid" position="17,191" render="Listbox" scrollbarMode="showNever" selectionPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/grid_sel.svg" selectionZoom="1.2" size="2571,1140" source="medialist" transparent="1">
+			<convert type="TemplatedMultiContent">{"template":[MultiContentEntryText(pos=(11,140),size=(300,68),flags=RT_HALIGN_CENTER|RT_VALIGN_CENTER|RT_WRAP,text=1,backcolor=MultiContentTemplateColor("Tile"),backcolor_sel=MultiContentTemplateColor("CursorBackground"),color=MultiContentTemplateColor("foreground"),color_sel=0xFF000004),MultiContentEntryPixmapAlphaTest(pos=(31,20),size=(260,104),png=3),],"fonts":[gFont("Regular",31)],"itemHeight":265,"itemWidth":355}</convert>
+		</widget>
+		<widget font="Regular;35" halign="center" name="red" position="0,1373" size="512,47" transparent="1"/>
+		<widget font="Regular;35" halign="center" name="green" position="512,1373" size="512,47" transparent="1"/>
+		<widget font="Regular;35" halign="center" name="yellow" position="1536,1373" size="512,47" transparent="1"/>
+		<widget font="Regular;35" halign="center" name="blue" position="2048,1373" size="512,47" transparent="1"/>
+		<eLabel backgroundColor="#ff0000" position="0,1427" size="640,13"/>
+		<eLabel backgroundColor="#669900" position="640,1427" size="640,13"/>
+		<eLabel backgroundColor="#e5b243" position="1280,1427" size="640,13"/>
+		<eLabel backgroundColor="#3366cc" position="1920,1427" size="640,13"/>
 	</screen>
 	<screen backgroundColor="#ff000000" flags="wfNoBorder" name="STCCockpitPlayer" position="center,center" size="2560,1440">
 		<widget backgroundColor="#41535c" cornerRadius="80" font="Regular;35" foregroundColor="white" halign="center" position="2440,1340" render="FixedLabel" size="80,80" source="session.CurrentService" text="UHD" valign="center" zPosition="2">

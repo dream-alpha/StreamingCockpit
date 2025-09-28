@@ -24,11 +24,11 @@ from Components.config import config
 from .Debug import logger
 
 LIST_EVENT_NAME = 0
-LIST_SHORT_DESCRIPTION = 0
-LIST_DESCRIPTION = 0
-LIST_TIMESTAMP = 0
-LIST_DURATION = 0
-LIST_SIZE = 0
+LIST_SHORT_DESCRIPTION = 1
+LIST_DESCRIPTION = 2
+LIST_TIMESTAMP = 3
+LIST_DURATION = 4
+LIST_SIZE = 5
 
 
 class ServiceCenter():
@@ -45,8 +45,7 @@ class ServiceCenter():
 class ServiceInfo():
 
     def __init__(self, service, movie_list=None):
-        logger.debug("service.getPath(): %s",
-                     service.getPath() if service else None)
+        logger.debug("service.getPath(): %s", service.getPath() if service else None)
         self.info = Info(service, movie_list)
 
     def getLength(self, _service=None):
@@ -93,11 +92,11 @@ class Info():
     def __init__(self, service, movie_list=None):
         logger.info("...")
         self.path = service.getPath()
-        self.afile = movie_list and movie_list.getCurrent()
+        self.afile = movie_list and movie_list[0]  # movie_list.getCurrent()
 
     def getName(self):
         # EventName NAME
-        name = "PlutoTV"  # workaround
+        name = ""
         if self.afile:
             name = self.afile[LIST_EVENT_NAME]
         logger.debug("name: %s", name)
@@ -176,7 +175,7 @@ class Info():
 
     def getSize(self):
         logger.debug("...")
-        size = self.afile[LIST_SIZE]  # No null check!
+        size = self.afile[LIST_SIZE]
         return size
 
     def getCover(self):

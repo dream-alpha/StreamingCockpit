@@ -45,7 +45,6 @@ class Loading():
         self.csel["int_loading"] = Label()
         self.csel["msg_loading"] = Label()
         self.pics = len(glob.glob(resolveFilename(SCOPE_PLUGINS, "Extensions/%s/skin/images/spinner/*.png" % PLUGIN)))
-        self.seconds = -1
         logger.debug("self.pics: %s", self.pics)
 
     def start(self, seconds=-1, msg=""):
@@ -70,10 +69,6 @@ class Loading():
         if self.summaries:
             self.summaries[0]["background"].hide()
             self.summaries[0]["lcd_pic_loading"].hide()
-
-    def setSeconds(self, seconds):
-        logger.debug("...")
-        self.csel["int_loading"].setText("%1d" % seconds)
 
     def doActivityTimer(self):
         path = getSkinPath("images/spinner/wait%s.png" % (self.pic_index + 1))

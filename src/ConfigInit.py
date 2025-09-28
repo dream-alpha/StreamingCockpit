@@ -19,7 +19,13 @@
 
 
 from Components.config import config, ConfigSelection, ConfigSubsection, ConfigNothing, NoSave, ConfigInteger, ConfigText, ConfigYesNo
+from .BoxUtils import getBoxType
 from .Debug import logger, log_levels, initLogging
+
+if not getBoxType().startswith("dream"):  # DM9XX
+    BUFFERING = 5
+else:
+    BUFFERING = 2
 
 
 class ConfigInit():
@@ -29,9 +35,14 @@ class ConfigInit():
         config.plugins.streamingcockpit = ConfigSubsection()
         config.plugins.streamingcockpit.fake_entry = NoSave(ConfigNothing())
         config.plugins.streamingcockpit.debug_log_level = ConfigSelection(default="INFO", choices=list(log_levels.keys()))
-        config.plugins.streamingcockpit.selection_level = ConfigInteger(default=0)
-        config.plugins.streamingcockpit.selection_0_index = ConfigInteger(default=0)
-        config.plugins.streamingcockpit.selection_1_index = ConfigInteger(default=0)
+        config.plugins.streamingcockpit.data_dir = ConfigText(default="")
+        config.plugins.streamingcockpit.selection0_index = ConfigInteger(default=0)
+        config.plugins.streamingcockpit.selection1_index = ConfigInteger(default=0)
+        config.plugins.streamingcockpit.selection2_index = ConfigInteger(default=0)
+        config.plugins.streamingcockpit.selection0_key = ConfigText(default="")
+        config.plugins.streamingcockpit.selection1_key = ConfigText(default="")
+        config.plugins.streamingcockpit.selection2_key = ConfigText(default="")
         config.plugins.streamingcockpit.show_ads = ConfigYesNo(default=False)
+        config.plugins.streamingcockpit.buffering = ConfigInteger(default=BUFFERING)
 
         initLogging()

@@ -5,8 +5,8 @@
    width="220"
    height="80"
    viewBox="0 0 220 80"
-   sodipodi:docname="PiconCockpit.svg"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="StreamingCockpit.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -25,14 +25,16 @@
      inkscape:pagecheckerboard="0"
      showgrid="false"
      inkscape:zoom="2.19"
-     inkscape:cx="123.51598"
+     inkscape:cx="123.28767"
      inkscape:cy="40.182648"
      inkscape:window-width="1280"
      inkscape:window-height="730"
      inkscape:window-x="-6"
      inkscape:window-y="-6"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata3837">
     <rdf:RDF>
@@ -133,13 +135,14 @@
          style="font-size:21.3333px">Streaming</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:29.33333397px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
-       x="87.650597"
-       y="65.506729"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+       x="99.066124"
+       y="60.483894"
        id="text346"><tspan
          id="tspan344"
-         x="87.650597"
-         y="65.506729">Cockpit</tspan></text>
+         x="99.066124"
+         y="60.483894"
+         style="font-size:21.3333px">Cockpit</tspan></text>
     <g
        fill="#ffffff"
        fill-rule="nonzero"

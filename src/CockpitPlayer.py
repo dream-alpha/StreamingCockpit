@@ -31,12 +31,11 @@ from Screens.InfoBarGenerics import InfoBarAudioSelection, InfoBarShowHide, Info
 from Tools.LoadPixmap import LoadPixmap
 from .Debug import logger
 from .__init__ import _
-from .SkinUtils import getSkinName
+from .SkinUtils import getSkinName, getSkinPath
 from .CockpitCueSheet import CockpitCueSheet
 from .CockpitPVRState import CockpitPVRState
 from .CockpitSeek import CockpitSeek
 from .BoxUtils import getBoxType
-from .SkinUtils import getSkinPath
 from .ServiceUtils import getService
 from .log_utils import write_log
 
@@ -57,11 +56,13 @@ class CockpitPlayer(
     ALLOW_SUSPEND = True
 
     def __init__(self, session, _service, config_plugins_plugin, showMovieInfoEPGPtr=None, leave_on_eof=False, recording_start_time=0, timeshift=None, rec_files=None, service_center=None, stream=False):
+        logger.info("rec_files: %s", rec_files)
         self.config_plugins_plugin = config_plugins_plugin
         self.showMovieInfoEPGPtr = showMovieInfoEPGPtr
         self.leave_on_eof = leave_on_eof
         self.stream = stream
         self.rec_files = [] if rec_files is None else rec_files
+        self.section_index = -1
         self.service = self.getNextService()
         self.show_state_pic = False
         self.fast_winding_hint_message_showed = False
@@ -71,7 +72,6 @@ class CockpitPlayer(
         self.alive_timer_conn = self.alive_timer.timeout.connect(self.isPlaying)
         self.last_position = 0
         self.current_position = 0
-        self.section_index = -1
         self.rec_dir = config.usage.default_path.value
 
         self.allowPiP = False
@@ -115,8 +115,10 @@ class CockpitPlayer(
         )
 
         event_start = False
-        CockpitSeek.__init__(self, session, self.service, event_start,
-                             recording_start_time, timeshift, service_center)
+        CockpitSeek.__init__(
+            self, session, self.service, event_start,
+            recording_start_time, timeshift, service_center
+        )
         CockpitPVRState.__init__(self)
 
         self.service_started = False
@@ -134,7 +136,9 @@ class CockpitPlayer(
 
     def getNextService(self):
         if self.rec_files:
-            _channel_uri, rec_file, self.section_index, _segment_index = self.rec_files.pop(0)
+            rec_file_dict = self.rec_files.pop(0)
+            rec_file = rec_file_dict.get("rec_file", None)
+            self.section_index = rec_file_dict.get("section_index", None)
             logger.info("rec_file: %s, section_index: %d", rec_file, self.section_index)
             return getService(rec_file, "PlutoTV")
         return None

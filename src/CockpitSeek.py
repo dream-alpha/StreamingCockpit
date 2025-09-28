@@ -18,34 +18,36 @@
 # <http://www.gnu.org/licenses/>.
 
 
+from time import time
 from .Debug import logger
 from .CutListUtils import secondsToPts, ptsToSeconds
-from .RecordingUtils import isStreamRecording
+from .ServiceUtils import SID_DVB
+from .RecordingUtils import isRecording
 from .CockpitSmartSeek import CockpitSmartSeek
 from .CockpitEvent import CockpitEvent
-from .JobUtils import getPendingJob
 
 
 class CockpitSeek(CockpitSmartSeek, CockpitEvent):
 
     def __init__(self, session, service, event_start, recording_start_time, timeshift, service_center):
         self.service = service
-        self.path = self.service.getPath()
         self.timeshift = timeshift
+        self.path = self.service.getPath()
         CockpitSmartSeek.__init__(self, event_start, True)
         CockpitEvent.__init__(self, session, service, recording_start_time, service_center)
-        self.recording_job = getPendingJob("TMP", self.path)
-        logger.info("recording_job: %s", self.recording_job)
 
     def isRecording(self):
-        is_recording = isStreamRecording(self.path)
+        is_recording = isRecording(self.path) or self.timeshift
         return is_recording
 
     def getLength(self):
         length = 0
         if self.service_started:
-            _, _, length, _, _ = self.getEventInfo()
-            length = secondsToPts(length)
+            if self.service.type == SID_DVB:
+                _, _, length, _, _ = self.getEventInfo()
+                length = secondsToPts(length)
+            if not length:
+                length = self.getSeekLength()
         logger.info("length: %ss (%s)", ptsToSeconds(length), length)
         return length
 
@@ -62,12 +64,14 @@ class CockpitSeek(CockpitSmartSeek, CockpitEvent):
     def getPosition(self):
         position = 0
         if self.service_started:
-            position = self.getSeekPosition()
+            before, offset, _, _, _ = self.getEventInfo()
+            position = self.getSeekPosition() - secondsToPts(offset) + secondsToPts(before)
         logger.debug("position: %ss (%s)", ptsToSeconds(position), position)
         return position
 
     def getRecordingLength(self):
-        _, _, length, _, _ = self.getEventInfo()
+        _, _, _, _, recording_start_time = self.getEventInfo()
+        length = secondsToPts(int(time()) - recording_start_time)
         logger.debug("recording_length: %ss (%s)", ptsToSeconds(length), length)
         return length
 
@@ -75,8 +79,8 @@ class CockpitSeek(CockpitSmartSeek, CockpitEvent):
         position = 0
         if self.service_started:
             if self.isRecording():
-                _, _, length, _, _ = self.getEventInfo()
-                position = secondsToPts(length * self.recording_job.getProgress() / 100)
+                before, offset, _, _, recording_start_time = self.getEventInfo()
+                position = secondsToPts(int(time()) - recording_start_time - offset + before)
         logger.debug("recording_position: %ss (%s)", ptsToSeconds(position), position)
         return position
 
@@ -92,4 +96,8 @@ class CockpitSeek(CockpitSmartSeek, CockpitEvent):
 
     def getBeforePosition(self):
         position = 0
+        if self.service_started:
+            before, _, _, _, _ = self.getEventInfo()
+            position = secondsToPts(before)
+        logger.debug("before_position: %ss (%s)", ptsToSeconds(position), position)
         return position

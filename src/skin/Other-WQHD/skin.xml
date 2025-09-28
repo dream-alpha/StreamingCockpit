@@ -1,18 +1,17 @@
 <?xml version="1.0" ?>
 <skin>
-	<screen name="StreamingCockpit" position="center,147" size="2400,1240" title="StreamingCockpit">
-		<ePixmap pixmap="Default-FHD/skin_default/buttons/red.svg" position="13,7" size="400,93"/>
-		<ePixmap pixmap="Default-FHD/skin_default/buttons/green.svg" position="413,7" size="400,93"/>
-		<ePixmap pixmap="Default-FHD/skin_default/buttons/yellow.svg" position="813,7" size="400,93"/>
-		<ePixmap pixmap="Default-FHD/skin_default/buttons/blue.svg" position="1213,7" size="400,93"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="2560,1440" zPosition="-1"/>
+	<screen name="StreamingCockpit" position="center,227" size="1947,1093" title="Streaming Cockpit">
+		<layout name="2Button"/>
 		<widget alphatest="blend" name="pic_loading" position="center,center" size="133,133" zPosition="3"/>
 		<widget font="Regular;53" halign="center" name="int_loading" position="center,center" size="107,107" transparent="1" valign="center" zPosition="4"/>
-		<widget font="Regular;53" halign="center" name="msg_loading" position="center,493" size="2400,107" transparent="1" valign="center" zPosition="4"/>
-		<widget backgroundColor="#9f1313" font="Regular;40" halign="center" position="13,7" render="Label" size="400,93" source="key_red" transparent="1" valign="center" zPosition="1"/>
-		<widget backgroundColor="#1f771f" font="Regular;40" halign="center" position="413,7" render="Label" size="400,93" source="key_green" transparent="1" valign="center" zPosition="1"/>
-		<widget backgroundColor="#a08500" font="Regular;40" halign="center" position="813,7" render="Label" size="400,93" source="key_yellow" transparent="1" valign="center" zPosition="1"/>
-		<widget backgroundColor="#18188b" font="Regular;40" halign="center" position="1213,7" render="Label" size="400,93" source="key_blue" transparent="1" valign="center" zPosition="1"/>
+		<widget font="Regular;53" halign="center" name="msg_loading" position="center,444" size="1947,107" transparent="1" valign="center" zPosition="4"/>
+		<widget backgroundColor="#9f1313" font="Regular;40" foregroundColor="white" halign="center" name="red" position="13,7" shadowColor="black" shadowOffset="-2,-2" size="467,93" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#1f771f" font="Regular;40" foregroundColor="white" halign="center" name="green" position="480,7" shadowColor="black" shadowOffset="-2,-2" size="467,93" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#a08500" font="Regular;40" foregroundColor="white" halign="center" name="yellow" position="947,7" shadowColor="black" shadowOffset="-2,-2" size="467,93" transparent="1" valign="center" zPosition="1"/>
+		<widget backgroundColor="#18188b" font="Regular;40" foregroundColor="white" halign="center" name="blue" position="1413,7" shadowColor="black" shadowOffset="-2,-2" size="467,93" transparent="1" valign="center" zPosition="1"/>
+		<widget enableWrapAround="1" position="13,120" render="Listbox" scrollbarMode="showOnDemand" size="1573,960" source="medialist">
+			<convert type="TemplatedMultiContent">{"template":[MultiContentEntryText(pos=(227,7),size=(1333,53),font=0,text=1,color_sel=0xFF000004),MultiContentEntryText(pos=(227,60),size=(1333,40),font=1,text=2,color=0xa0a0a0,color_sel=0xFF000004),MultiContentEntryPixmapAlphaTest(pos=(7,13),size=(200,80),png=3),],"fonts":[gFont("Regular",43),gFont("Regular",32)],"itemHeight":107}</convert>
+		</widget>
 	</screen>
 	<screen flags="wfNoBorder" name="STCCockpitPlayer" position="0,1100" size="2560,300">
 		<ePixmap alphatest="off" pixmap="skin_default/infobar.png" position="0,0" size="2560,300" zPosition="-1"/>

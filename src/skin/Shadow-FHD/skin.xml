@@ -1,18 +1,22 @@
 <?xml version="1.0" ?>
 <skin>
-	<screen flags="wfNoBorder" name="StreamingCockpit" position="0,0" size="1920,1080" title="StreamingCockpit">
-		<widget font="Bold;32" noWrap="1" position="20,30" render="Label" size="1880,43" source="Title" transparent="1"/>
+	<screen backgroundColor="background" flags="wfNoBorder" name="StreamingCockpit" position="center,center" size="1920,1080" title="Streaming Cockpit">
 		<ePixmap gradient="#ff000000,#131a1d,vertical" position="0,0" size="1920,486" zPosition="-1"/>
 		<eLabel backgroundColor="#131a1d" position="0,486" size="1920,108" zPosition="-1"/>
 		<ePixmap gradient="#131a1d,#ff000000,vertical" position="0,594" size="1920,486" zPosition="-1"/>
+		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/plugin_selection.png" position="25,15" size="70,70"/>
+		<widget font="Bold;32" noWrap="1" position="130,30" render="Label" size="1745,40" source="Title" transparent="1"/>
 		<widget alphatest="blend" name="pic_loading" position="center,center" size="100,100" zPosition="3"/>
 		<widget font="Regular;40" halign="center" name="int_loading" position="center,center" size="80,80" transparent="1" valign="center" zPosition="4"/>
 		<widget font="Regular;40" halign="center" name="msg_loading" position="center,600" size="1920,80" transparent="1" valign="center" zPosition="4"/>
-		<ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/images/plutotv.jpg" position="0,0" size="1920,1080" zPosition="-1"/>
-		<widget font="Regular;26" halign="center" position="0,1030" render="Label" size="480,35" source="key_red" transparent="1"/>
-		<widget font="Regular;26" halign="center" position="480,1030" render="Label" size="480,35" source="key_green" transparent="1"/>
-		<widget font="Regular;26" halign="center" position="960,1030" render="Label" size="480,35" source="key_yellow" transparent="1"/>
-		<widget font="Regular;26" halign="center" position="1440,1030" render="Label" size="480,35" source="key_blue" transparent="1"/>
+		<widget font="Regular;28" halign="left" name="header" position="25,90" size="1880,43" transparent="1" valign="center"/>
+		<widget backgroundPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/grid.svg" enableWrapAround="1" margin="30,30" mode="grid" position="13,143" render="Listbox" scrollbarMode="showNever" selectionPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/grid_sel.svg" selectionZoom="1.2" size="1928,855" source="medialist" transparent="1">
+			<convert type="TemplatedMultiContent">{"template": [MultiContentEntryText(pos=(8,105), size=(225,51), flags=RT_HALIGN_CENTER|RT_VALIGN_CENTER|RT_WRAP, text=1, backcolor=MultiContentTemplateColor("Tile"), backcolor_sel=MultiContentTemplateColor("CursorBackground"), color=MultiContentTemplateColor("foreground"), color_sel=0xFF000004), MultiContentEntryPixmapAlphaTest(pos=(23,15), size=(195,78), png=3), ], "fonts": [gFont("Regular",23)], "itemHeight":199, "itemWidth":266}</convert>
+		</widget>
+		<widget font="Regular;26" halign="center" name="red" position="0,1030" size="480,35" transparent="1"/>
+		<widget font="Regular;26" halign="center" name="green" position="480,1030" size="480,35" transparent="1"/>
+		<widget font="Regular;26" halign="center" name="yellow" position="960,1030" size="480,35" transparent="1"/>
+		<widget font="Regular;26" halign="center" name="blue" position="1440,1030" size="480,35" transparent="1"/>
 		<eLabel backgroundColor="#ff0000" position="0,1070" size="480,10"/>
 		<eLabel backgroundColor="#669900" position="480,1070" size="480,10"/>
 		<eLabel backgroundColor="#e5b243" position="960,1070" size="480,10"/>

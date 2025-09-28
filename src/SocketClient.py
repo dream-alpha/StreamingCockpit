@@ -91,7 +91,7 @@ class SocketClient(object):
             t.daemon = True
             t.start()
 
-    def send_json(self, data):
+    def send_message(self, data):
         retries = 0
         while (not self.sock or not self._running) and retries < 10:
             logger.info("SocketClient: Waiting for connection to send message...")

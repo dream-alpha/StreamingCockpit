@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: StreamingCockpit\n"
-"POT-Creation-Date: 2025-08-29 13:06+0200\n"
-"PO-Revision-Date: 2025-08-29 13:07+0200\n"
+"POT-Creation-Date: 2025-09-23 18:55+0200\n"
+"PO-Revision-Date: 2025-09-23 18:55+0200\n"
 "Last-Translator: dream-alpha\n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -10,27 +10,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.5\n"
+"X-Generator: Poedit 3.6\n"
 "X-Poedit-Basepath: ../src\n"
 "X-Poedit-SearchPath-0: .\n"
 
-msgid "PlutoTV - Categories"
-msgstr "PlutoTV - Kategorien"
-
-msgid "PlutoTV - Channels"
-msgstr "PlutoTV - Kanäle"
-
-msgid "Channel selection"
-msgstr "Kanalauswahl"
-
 msgid "Infobar/Play"
-msgstr "Infobar/Play"
+msgstr "Infoleiste/Play"
 
 msgid "Play/Pause"
 msgstr "Play/Pause"
 
 msgid "Stop playback"
-msgstr "Stopp"
+msgstr "Stoppe Playback"
 
 msgid "Skip forward"
 msgstr "Springe vorwärts"
@@ -39,7 +30,7 @@ msgid "Skip backward"
 msgstr "Springe zurück"
 
 msgid "EPG Info"
-msgstr "EPG Info"
+msgstr "EPG-Informationen"
 
 msgid "COCKPIT"
 msgstr "COCKPIT"
@@ -59,23 +50,32 @@ msgstr "Log Stufe"
 msgid "Select the debug log level."
 msgstr "Auswahl der Log-Stufe"
 
-msgid "Exit"
-msgstr "Verlassen"
-
-msgid "Playlist"
-msgstr "Playliste"
-
-msgid "Settings"
-msgstr "Einstellungen"
-
 msgid "Error occurred while playing back stream"
-msgstr "Fehler beim Playback"
+msgstr "Fehler beim Playback des Streams"
 
 msgid "Starting playback..."
 msgstr "Playback startet gleich..."
 
-msgid "Stream PlutoTV"
-msgstr "Streame PlutoTV"
+msgid "Exit"
+msgstr "Verlassen"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Providers"
+msgstr "Anbieter"
+
+msgid "Categories"
+msgstr "Kategorien"
+
+msgid "Channels"
+msgstr "Kanäle"
+
+msgid "Loading"
+msgstr "Lade"
+
+msgid "Watch online videos"
+msgstr "Online Streams ansehen"
 
 msgid "End"
 msgstr "Ende"
