@@ -24,6 +24,7 @@ from .CockpitPlayer import CockpitPlayer
 from .Loading import Loading
 from .Debug import logger
 from .ServiceCenter import ServiceCenter
+from .Version import ID
 from .__init__ import _
 
 
@@ -35,6 +36,8 @@ class SocketClientHandler():
         self.loading = Loading(self, None)
         self.service_center = None
         self.buffering = config.plugins.streamingcockpit.buffering.value
+        self.data_dir = os.path.join(config.plugins.streamingcockpit.data_dir.value, ID)
+        self.providers_dir = config.plugins.streamingcockpit.providers_dir.value
         self.first = True
         self.rec_files = []
         self.socket_client.connect()
@@ -45,11 +48,11 @@ class SocketClientHandler():
 
         # Prepare request based on parameters
         if provider is None:
-            request = ["get_providers", {}]
+            request = ["get_providers", {"data_dir": self.providers_dir}]
         elif category is None:
-            request = ["get_categories", {"provider": provider}]
+            request = ["get_categories", {"provider": provider, "data_dir": self.data_dir}]
         else:
-            request = ["get_channels", {"provider": provider, "category": category}]
+            request = ["get_media_items", {"provider": provider, "category": category, "data_dir": self.data_dir}]
 
         self.socket_client.send_message(request)
 
@@ -85,17 +88,17 @@ class SocketClientHandler():
             categories = args.get("data", [])
             logger.info("Received categories: %s", categories)
             self.updateMediaList(categories)
-        elif command == "get_channels":
-            channels = args.get("data", [])
-            logger.info("Received channels: %s", channels)
-            self.updateMediaList(channels)
+        elif command == "get_media_items":
+            media_items = args.get("data", [])
+            logger.info("Received media items: %s", media_items)
+            self.updateMediaList(media_items)
         else:
             logger.warning("Unknown command received: %s", command)
 
-    def startMovie(self, channel_uri):
+    def startMovie(self, channel_uri, provider):
         logger.info("channel_uri: %s", channel_uri)
         rec_dir = os.path.normpath(config.usage.default_path.value)
-        args = {"url": channel_uri, "rec_dir": rec_dir, "show_ads": config.plugins.streamingcockpit.show_ads.value, "buffering": self.buffering}
+        args = {"url": channel_uri, "rec_dir": rec_dir, "show_ads": config.plugins.streamingcockpit.show_ads.value, "buffering": self.buffering, "provider": provider}
         self.socket_client.send_message(["start", args])
         self.loading.start(-1, _("Starting playback..."))
 

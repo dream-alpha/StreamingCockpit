@@ -1,24 +1,34 @@
+import os
+from Components.config import config
 from Components.Sources.List import List
-from Tools.Directories import resolveFilename, SCOPE_SKIN_IMAGE
 from Tools.LoadPixmap import LoadPixmap
 from .Debug import logger
+from .__init__ import _
 
 
-def MediaEntryComponent(media):
-
-    icon = media.get("icon", None)
-    if icon is None:
-        icon_file = resolveFilename(SCOPE_SKIN_IMAGE, "skin_default/icons/media.png")
-    else:
-        icon_file = resolveFilename(SCOPE_SKIN_IMAGE, "skin_default/icons/" + icon)
+def MediaEntryComponent(media, level):
     try:
-        png = LoadPixmap(icon_file)
-    except Exception as e:
-        logger.error("Failed to load icon: %s", e)
+        if level == 0:
+            data_dir = config.plugins.streamingcockpit.providers_dir.value
+        else:
+            data_dir = config.plugins.streamingcockpit.data_dir.value
         png = None
+        provider_id = media["provider_id"]
+        thumbnail_name = media.get("thumbnail", None)
+        thumbnail_file = os.path.join(data_dir, provider_id, thumbnail_name)
+        logger.info("Loading thumbnail: %s", thumbnail_file)
+        if thumbnail_file and os.path.isfile(thumbnail_file):
+            png = LoadPixmap(thumbnail_file)
+    except Exception as e:
+        logger.error("Failed to load thumbnail: %s", e)
 
+    name = _("n/a")
+    if "name" in media:
+        name = str(media.get("name", ""))
+    elif "title" in media:
+        name = str(media.get("title", ""))
     return [
-        media, str(media.get("name", "")), str(media.get("description", "")), png
+        media, name, str(media.get("description", "")), png
     ]
 
 class MediaList(List):

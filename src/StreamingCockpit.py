@@ -163,7 +163,7 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
                 logger.debug("Final selection reached: %s", media)
                 self.channel = media
                 url = media.get("url", None)
-                self.startMovie(url)
+                self.startMovie(url, self.provider)
 
     def StreamingCockpitCallback(self, leave):
         logger.info("quit: %s", leave)
@@ -195,10 +195,10 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
             logger.error("Failed to load media list: %s", e)
 
     def updateMediaList(self, medialist):
-        # logger.info("Media list: %s", medialist)
+        logger.info("Media list: %s", medialist)
         alist = []
         if medialist:
-            alist = [MediaEntryComponent(media) for media in medialist]
+            alist = [MediaEntryComponent(media, self.level) for media in medialist]
         self["medialist"].setList(alist)
         media_index = getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).value
         self["medialist"].setIndex(media_index)
@@ -210,8 +210,10 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         self.session.openWithCallback(
             self.showSettingsCallback, ConfigScreen, config.plugins.streamingcockpit)
 
-    def showSettingsCallback(self, _changed=None):
-        pass
+    def showSettingsCallback(self, changed=None):
+        logger.info("Settings closed")
+        if changed:
+            logger.info("Settings changed")
 
     def createSummary(self):
         return StreamingCockpitSummary
