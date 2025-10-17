@@ -63,7 +63,7 @@ def main(session, **__kwargs):
     session.nav.stopService()
     startServer()
     socket_client = SocketClient(port=5000)
-    session.openWithCallback(StreamingCockpitCallback, StreamingCockpit, 0, None, socket_client)
+    session.openWithCallback(StreamingCockpitCallback, StreamingCockpit, 0, socket_client=socket_client)
 
 
 def StreamingCockpitCallback(_dummy=None):

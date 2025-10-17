@@ -31,6 +31,7 @@ class ConfigScreenInit():
             # text, config, on save, on ok, e2 usage level, depends on rel parent, description
             (self.section, _("COCKPIT"), None, None, 0, [], ""),
             (_("Show advertisement"), config.plugins.streamingcockpit.show_ads, None, None, 0, [], _("Show advertisement instead of fillers")),
+            (_("Enable AV1 codec"), config.plugins.streamingcockpit.av1, None, None, 0, [], _("Enable AV1 codec for video selection (requires transcoding")),
             (self.section, _("DEBUG"), None, None, 2, [], ""),
             (_("Log level"), config.plugins.streamingcockpit.debug_log_level, self.setLogLevel, None, 2, [], _("Select the debug log level."))
         ]

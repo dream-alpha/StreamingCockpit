@@ -21,11 +21,12 @@ from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.config import config
 from Components.Label import Label
-from Tools.BoundFunction import boundFunction
 from .MediaList import MediaEntryComponent, MediaList
 from .SocketClientHandler import SocketClientHandler
 from .ConfigScreen import ConfigScreen
+from .STC_Config import STC_Config
 from .Debug import logger
+from .Version import PLUGIN
 from .__init__ import _
 
 
@@ -34,16 +35,15 @@ class StreamingCockpitSummary(Screen, object):
 
 
 class StreamingCockpit(SocketClientHandler, Screen, object):
-    def __init__(self, session, level, media=None, socket_client=None, provider=None):
+    def __init__(self, session, level, provider=None, category=None, socket_client=None, selection_config=None):
         self.socket_client = socket_client
         self.level = level
+        self.category = category
         logger.info("Opening level: %d", self.level)
-        self.media = media
-        self.providers = None
+        self.stc_config = STC_Config()
+        self.selection_config = self.stc_config.load() if selection_config is None else selection_config
         self.provider = provider
-        self.categories = None
-        self.channels = None
-        self.channel = None
+        self.provider_id = self.provider.get("provider_id", "none") if self.provider else "none"
         Screen.__init__(self, session)
         self.skinName = "StreamingCockpit"
         SocketClientHandler.__init__(self, session, socket_client)
@@ -83,7 +83,7 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         headers = [
             _("Providers"),
             _("Categories"),
-            _("Channels"),
+            _("Medias"),
         ]
         self.headers = headers
         self["header"] = Label()
@@ -112,8 +112,8 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         ]
         action_map = {
             "OK": self.handleSelection,
-            "EXIT": boundFunction(self.close, False),
-            "RED": boundFunction(self.close, True)
+            "EXIT": self.back,
+            "RED": self.exit
         }
         merged_actions = action_map.copy()
         merged_actions.update(actions[level])
@@ -142,28 +142,34 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         current = self["medialist"].getCurrent()
         if current is not None:
             media = current[0]
+            logger.info("Selected media: %s", media)
             media_index = self["medialist"].getIndex()
-            getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).value = media_index
-            getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).save()
 
             if self.level == 0:
                 self.provider = media
+            elif self.level == 1:
+                self.category = media
+
+            self.stc_config.set_index(
+                self.selection_config,
+                self.provider_id,
+                self.level,
+                media_index
+            )
 
             if self.level < self.max_level:
-                logger.info("Selected media: %s", media)
                 self.session.openWithCallback(
                     self.StreamingCockpitCallback,
                     StreamingCockpit,
                     self.level + 1,
-                    media,
+                    self.provider,
+                    self.category,
                     self.socket_client,
-                    self.provider
+                    self.selection_config
                 )
             else:
                 logger.debug("Final selection reached: %s", media)
-                self.channel = media
-                url = media.get("url", None)
-                self.startMovie(url, self.provider)
+                self.startMovie(self.provider, media)
 
     def StreamingCockpitCallback(self, leave):
         logger.info("quit: %s", leave)
@@ -172,25 +178,8 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
 
     def getMediaList(self):
         logger.info("Loading media list for level %d", self.level)
-        medialist = []
         try:
-            if self.level == 0:
-                if self.providers is None:
-                    self.requestMediaList()
-                else:
-                    self.updateMediaList(self.providers)
-            elif self.level == 1:
-                if self.categories is None:
-                    self.requestMediaList(provider=self.provider)
-                else:
-                    self.updateMediaList(self.categories)
-                logger.debug("Categories: %s", medialist)
-            elif self.level == 2:
-                if self.channels is None:
-                    self.requestMediaList(provider=self.provider, category=self.media)
-                else:
-                    self.updateMediaList(self.channels)
-                logger.debug("Channels: %s", medialist)
+            self.requestMediaList(self.level, self.provider, self.category)
         except Exception as e:
             logger.error("Failed to load media list: %s", e)
 
@@ -200,10 +189,18 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         if medialist:
             alist = [MediaEntryComponent(media, self.level) for media in medialist]
         self["medialist"].setList(alist)
-        media_index = getattr(config.plugins.streamingcockpit, "selection%d_index" % self.level).value
+        media_index = self.stc_config.get_index(
+            self.selection_config,
+            self.provider_id,
+            self.level
+        )
         self["medialist"].setIndex(media_index)
         self["medialist"].show()
         self["header"].setText(self.headers[self.level])
+        title = PLUGIN
+        if self.level > 0 and self.provider:
+            title += " - " + self.provider.get("name", "")
+        self.setTitle(title)
 
     def showSettings(self):
         logger.info("...")
@@ -214,6 +211,14 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         logger.info("Settings closed")
         if changed:
             logger.info("Settings changed")
+
+    def back(self):
+        self.stc_config.save(self.selection_config)
+        self.close(False)
+
+    def exit(self):
+        self.stc_config.save(self.selection_config)
+        self.close(True)
 
     def createSummary(self):
         return StreamingCockpitSummary

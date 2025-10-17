@@ -42,16 +42,16 @@ class SocketClientHandler():
         self.rec_files = []
         self.socket_client.connect()
 
-    def requestMediaList(self, provider=None, category=None):
+    def requestMediaList(self, level, provider, category):
         """Request medialist from server and wait for response."""
-        logger.info("Requesting medialist: provider=%s, category=%s", provider, category)
+        logger.info("Requesting medialist: level: %s, provider: %s, category: %s", level, provider, category)
 
-        # Prepare request based on parameters
-        if provider is None:
+        # Prepare request based on level
+        if level == 0:
             request = ["get_providers", {"data_dir": self.providers_dir}]
-        elif category is None:
+        elif level == 1:
             request = ["get_categories", {"provider": provider, "data_dir": self.data_dir}]
-        else:
+        elif level == 2:
             request = ["get_media_items", {"provider": provider, "category": category, "data_dir": self.data_dir}]
 
         self.socket_client.send_message(request)
@@ -95,10 +95,21 @@ class SocketClientHandler():
         else:
             logger.warning("Unknown command received: %s", command)
 
-    def startMovie(self, channel_uri, provider):
-        logger.info("channel_uri: %s", channel_uri)
+    # def startMovie(self, media_url, provider):
+    def startMovie(self, provider, media):
+        media_url = media.get("url", "")  # compatibility
+        self.channel = media  # compatibility
+        logger.info("media_url: %s", media_url)
         rec_dir = os.path.normpath(config.usage.default_path.value)
-        args = {"url": channel_uri, "rec_dir": rec_dir, "show_ads": config.plugins.streamingcockpit.show_ads.value, "buffering": self.buffering, "provider": provider}
+        args = {
+            "url": media_url,
+            "rec_dir": rec_dir,
+            "show_ads": config.plugins.streamingcockpit.show_ads.value,
+            "buffering": self.buffering,
+            "provider": provider,
+            "av1": config.plugins.streamingcockpit.av1.value,
+            "quality": config.plugins.streamingcockpit.quality.value
+        }
         self.socket_client.send_message(["start", args])
         self.loading.start(-1, _("Starting playback..."))
 

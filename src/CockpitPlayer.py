@@ -138,7 +138,7 @@ class CockpitPlayer(
         if self.rec_files:
             rec_file_dict = self.rec_files.pop(0)
             rec_file = rec_file_dict.get("rec_file", None)
-            self.section_index = rec_file_dict.get("section_index", None)
+            self.section_index = rec_file_dict.get("section_index", 0)
             logger.info("rec_file: %s, section_index: %d", rec_file, self.section_index)
             return getService(rec_file, "PlutoTV")
         return None
