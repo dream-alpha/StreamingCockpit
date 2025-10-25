@@ -1,0 +1,11 @@
+#!/bin/sh
+echo "***********************************"
+echo "*        StreamingCockpit         *"
+echo "*               by                *"
+echo "*          dream-alpha            *"
+echo "***********************************"
+echo ""
+echo "Plugin StreamingCockpit installed successfully."
+echo "Please restart DreamOS now!"
+echo ""
+exit 0

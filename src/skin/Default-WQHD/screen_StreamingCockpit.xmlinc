@@ -1,0 +1,14 @@
+	<screen backgroundColor="background" flags="wfNoBorder" name="StreamingCockpit" position="center,center" size="2560,1440" title="StreamingCockpit">
+		<xmlinc file="screenpart_Background"/>
+		<xmlinc file="screenpart_Title" menu_pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/plugin_selection.png" source="Title"/>
+		<xmlinc file="screenpart_Loading"/>
+		<widget font="Regular;37" halign="left" name="header" position="33,120" size="eval($screen_width-53),57" transparent="1" valign="center"/>
+		<widget backgroundPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/grid.svg" enableWrapAround="1" margin="40,40" mode="grid" position="17,191" render="Listbox" scrollbarMode="showNever" selectionPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Default-WQHD/images/grid_sel.svg" selectionZoom="1.2" size="2571,1333" source="medialist" transparent="1">
+			<convert type="TemplatedMultiContent">{"template":[MultiContentEntryText(pos=(11,147),size=(300,68),flags=RT_HALIGN_CENTER|RT_VALIGN_CENTER|RT_WRAP,text=1,backcolor=MultiContentTemplateColor("Tile"),backcolor_sel=MultiContentTemplateColor("CursorBackground"),color=MultiContentTemplateColor("foreground"),color_sel=0xFF000004),MultiContentEntryPixmapAlphaTest(pos=(31,13),size=(260,133),png=3),],"fonts":[gFont("Regular",31)],"itemHeight":265,"itemWidth":355}</convert>
+		</widget>
+		<xmlinc file="screenpart_1Button_name" name="key_red" position="0,eval($screen_height-67)" transparent="1" width="eval($screen_width/5)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_green" position="eval($screen_width/5),eval($screen_height-67)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_yellow" position="eval(3*$screen_width/5),eval($screen_height-67)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_blue" position="eval(4*$screen_width/5),eval($screen_height-67)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_4Buttons_icon" position="0,eval($screen_height-13)"/>
+	</screen>

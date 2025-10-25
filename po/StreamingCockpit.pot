@@ -1,0 +1,126 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: StreamingCockpit\n"
+"POT-Creation-Date: 2025-10-25 23:24+0200\n"
+"PO-Revision-Date: 2025-10-25 23:28+0200\n"
+"Last-Translator: dream-alpha\n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ../src\n"
+"X-Poedit-SearchPath-0: .\n"
+
+msgid "Infobar/Play"
+msgstr ""
+
+msgid "Play/Pause"
+msgstr ""
+
+msgid "Stop playback"
+msgstr ""
+
+msgid "Skip forward"
+msgstr ""
+
+msgid "Skip backward"
+msgstr ""
+
+msgid "EPG Info"
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "best"
+msgstr ""
+
+msgid "COCKPIT"
+msgstr ""
+
+msgid "Show advertisement"
+msgstr ""
+
+msgid "Show advertisement instead of fillers"
+msgstr ""
+
+msgid "Resolution"
+msgstr ""
+
+msgid "Select 'provider' or define maximum movie resolution"
+msgstr ""
+
+msgid "DEBUG"
+msgstr ""
+
+msgid "Log level"
+msgstr ""
+
+msgid "Select the debug log level."
+msgstr ""
+
+msgid "Error occurred while playing back stream"
+msgstr ""
+
+msgid "Starting playback..."
+msgstr ""
+
+msgid "Exit"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Providers"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Medias"
+msgstr ""
+
+msgid "Loading"
+msgstr ""
+
+msgid "Watch online videos"
+msgstr ""
+
+msgid "End"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Defaults"
+msgstr ""
+
+msgid "Setup"
+msgstr ""
+
+msgid "Really close without saving settings?"
+msgstr ""
+
+msgid "Loading default settings will overwrite all settings, really load them?"
+msgstr ""
+
+msgid "Some changes require a GUI restart"
+msgstr ""
+
+msgid "Restart GUI now?"
+msgstr ""
+
+msgid "Bookmarks"
+msgstr ""
+
+msgid "Select directory"
+msgstr ""
+
+msgid "Path does not exist"
+msgstr ""
