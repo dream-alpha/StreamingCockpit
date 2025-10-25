@@ -1,0 +1,20 @@
+	<screen backgroundColor="background" flags="wfNoBorder" name="StreamingCockpit" position="center,center" size="1920,1080" title="StreamingCockpit">
+		<xmlinc file="screenpart_Background"/>
+		<xmlinc file="screenpart_Title" menu_pixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/plugin_selection.png" source="Title"/>
+		<xmlinc file="screenpart_Loading"/>
+		<widget font="Regular;28" halign="left" name="header" position="25,90" size="eval($screen_width-40),43" transparent="1" valign="center"/>
+		<widget backgroundPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/grid.svg" enableWrapAround="1" margin="30,30" mode="grid" position="13,143" render="Listbox" scrollbarMode="showNever" selectionPixmap="/usr/lib/enigma2/python/Plugins/Extensions/StreamingCockpit/skin/Shadow-FHD/images/grid_sel.svg" selectionZoom="1.2" size="1928,1000" source="medialist" transparent="1">
+			<convert type="TemplatedMultiContent">
+            {"template": 
+            [
+                MultiContentEntryText(pos=(8,110), size=(225,51), flags=RT_HALIGN_CENTER|RT_VALIGN_CENTER|RT_WRAP, text=1, backcolor=MultiContentTemplateColor("Tile"), backcolor_sel=MultiContentTemplateColor("CursorBackground"), color=MultiContentTemplateColor("foreground"), color_sel=0xFF000004),
+                MultiContentEntryPixmapAlphaTest(pos=(23,10), size=(195,100), png=3),
+            ], "fonts": [gFont("Regular",23)], "itemHeight":199, "itemWidth":266}
+            </convert>
+		</widget>
+		<xmlinc file="screenpart_1Button_name" name="key_red" position="0,eval($screen_height-50)" transparent="1" width="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_green" position="eval($screen_width/4),eval($screen_height-50)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_yellow" position="eval(2*$screen_width/4),eval($screen_height-50)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_1Button_name" name="key_blue" position="eval(3*$screen_width/4),eval($screen_height-50)" transparent="1" with="eval($screen_width/4)"/>
+		<xmlinc file="screenpart_4Buttons_icon" position="0,eval($screen_height-10)"/>
+	</screen>
