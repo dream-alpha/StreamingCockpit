@@ -92,6 +92,7 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         self.max_level = len(headers) - 1
 
         self["medialist"] = MediaList([])
+        self["medialist"].onSelectionChanged.append(self.updateTitle)
 
         actions = [
             {
@@ -185,10 +186,10 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
 
     def updateMediaList(self, medialist):
         logger.info("Media list: %s", medialist)
-        alist = []
+        self.alist = []
         if medialist:
-            alist = [MediaEntryComponent(media, self.level) for media in medialist]
-        self["medialist"].setList(alist)
+            self.alist = [MediaEntryComponent(media, self.level) for media in medialist]
+        self["medialist"].setList(self.alist)
         media_index = self.stc_config.get_index(
             self.selection_config,
             self.provider_id,
@@ -197,9 +198,20 @@ class StreamingCockpit(SocketClientHandler, Screen, object):
         self["medialist"].setIndex(media_index)
         self["medialist"].show()
         self["header"].setText(self.headers[self.level])
+        self.updateTitle()
+
+    def updateTitle(self):
         title = PLUGIN
         if self.level > 0 and self.provider:
-            title += " - " + self.provider.get("name", "")
+            title += " - " + self.provider.get("title", "")
+        if self.level > 1 and self.category:
+            title += " - " + self.category.get("name", "")
+        if self.level > 0:
+            index = self["medialist"].getIndex()
+            if hasattr(self, "alist"):
+                page = (index // 28) + 1
+                all_pages = ((len(self.alist) - 1) // 28) + 1 if self.alist else 1
+                title += " - %s: %s %s %s" % (_("Page"), page, _("of"), all_pages)
         self.setTitle(title)
 
     def showSettings(self):

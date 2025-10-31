@@ -21,6 +21,7 @@
 import os
 from enigma import iPlayableService, eSize, eTimer
 from Components.ActionMap import HelpableActionMap
+from Components.config import config
 from Components.Pixmap import Pixmap
 from Components.ServiceEventTracker import InfoBarBase, ServiceEventTracker
 from Components.Sources.COCCurrentService import COCCurrentService
@@ -36,6 +37,7 @@ from .CockpitPVRState import CockpitPVRState
 from .CockpitSeek import CockpitSeek
 from .BoxUtils import getBoxType
 from .ServiceUtils import getService
+from .log_utils import write_log
 
 
 class CockpitPlayerSummary(Screen):
@@ -45,7 +47,7 @@ class CockpitPlayerSummary(Screen):
         self.skinName = getSkinName("CockpitPlayerSummary")
 
 
-class CockpitPlayer(
+class HLSLivePlayer(
         Screen, HelpableScreen, InfoBarBase, InfoBarNotifications, InfoBarShowHide, InfoBarAudioSelection, InfoBarSubtitleSupport,
         CockpitCueSheet, CockpitSeek, CockpitPVRState
 ):
@@ -53,29 +55,25 @@ class CockpitPlayer(
     ENABLE_RESUME_SUPPORT = False
     ALLOW_SUSPEND = True
 
-    def __init__(self, session, _service, config_plugins_plugin, showMovieInfoEPGPtr=None, _leave_on_eof=False, recording_start_time=0, timeshift=None, rec_files=None, service_center=None, stream=False):
+    def __init__(self, session, _service, config_plugins_plugin, showMovieInfoEPGPtr=None, leave_on_eof=False, recording_start_time=0, timeshift=None, rec_files=None, service_center=None, stream=False):
         logger.info("rec_files: %s", rec_files)
         self.config_plugins_plugin = config_plugins_plugin
         self.showMovieInfoEPGPtr = showMovieInfoEPGPtr
+        self.leave_on_eof = leave_on_eof
         self.stream = stream
         self.rec_files = [] if rec_files is None else rec_files
-        self.rec_file_dict = None
-        self.service = None
-        self.recorder_id = None
-        if self.rec_files:
-            self.rec_file_dict = self.rec_files.pop(0)
-            rec_file = self.rec_file_dict.get("rec_file", None)
-            self.recorder_id = self.rec_file_dict.get("recorder_id", None)
-            self.service = getService(rec_file, "StreamingCockpit")
+        self.section_index = -1
+        self.service = self.getNextService()
         self.show_state_pic = False
         self.fast_winding_hint_message_showed = False
+        self.wait_timer = eTimer()
+        self.wait_timer_conn = self.wait_timer.timeout.connect(self.doEofInternal)
         self.alive_timer = eTimer()
         self.alive_timer_conn = self.alive_timer.timeout.connect(self.isPlaying)
         self.last_position = 0
         self.current_position = 0
-        self.service_started = False
-        self.first_start = True
-
+        self.rec_dir = config.usage.default_path.value
+        self.first_start = False
         self.allowPiP = False
         self.allowPiPSwap = False
 
@@ -123,6 +121,7 @@ class CockpitPlayer(
         )
         CockpitPVRState.__init__(self)
 
+        self.service_started = False
         self.onLayoutFinish.append(self.__onLayoutFinish)
 
     def createSummary(self):
@@ -133,18 +132,25 @@ class CockpitPlayer(
         player_icon = "streamer.svg" if self.stream else "player.svg"
         self["player_icon"].instance.setPixmap(LoadPixmap(getSkinPath(
             "images/" + player_icon), cached=True, size=eSize(60, 60)))
-        if self.service:
-            self.pvr_state_dialog.hide()
-            self.session.nav.playService(self.service)
-        else:
-            logger.error("No service to play!")
-            self.leavePlayer()
+        self.playSection(self.service)
+
+    def getNextService(self):
+        if self.rec_files:
+            rec_file_dict = self.rec_files.pop(0)
+            rec_file = rec_file_dict.get("rec_file", None)
+            self.section_index = rec_file_dict.get("section_index", 0)
+            logger.info("rec_file: %s, section_index: %d", rec_file, self.section_index)
+            return getService(rec_file, "PlutoTV")
+        return None
 
     def __serviceStarted(self):
         logger.info("=" * 70)
         logger.info("service_path: %s", self.service.getPath())
+        # write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "service-started")
         self.hide()
-        # self.start_alive_timer()
+        self.current_position = 0
+        self.last_position = 0
+        self.start_alive_timer()
         self.service_started = True
 
     def start_alive_timer(self):
@@ -168,9 +174,11 @@ class CockpitPlayer(
             if service_ext == ".mp4" and not getBoxType().startswith("dream"):
                 self.fast_winding_hint_message_showed = True
                 self.playpauseService()
-                self.showPVRState(False)
+                self.showPVRStatePic(False)
+                self.pvr_state_dialog.hide()
                 self.seekBack()
-                self.showPVRState(True)
+                self.showPVRStatePic(True)
+                self.pvr_state_dialog.show()
                 self.playpauseService()
             else:
                 self.playpauseService()
@@ -186,16 +194,10 @@ class CockpitPlayer(
     def showPVRStatePic(self, show):
         self.show_state_pic = show
 
-    def showPVRState(self, show):
-        self.show_state_pic = show
-        if show:
-            self.pvr_state_dialog.show()
-        else:
-            self.pvr_state_dialog.hide()
-
     def leavePlayer(self):
         logger.info("...")
-        self.alive_timer.stop()
+        self.wait_timer.stop()
+        self.stop_alive_timer()
         self.session.nav.stopService()
         self.close()
 
@@ -205,32 +207,53 @@ class CockpitPlayer(
         if self.current_position:
             if self.current_position == self.last_position:
                 logger.info("Playback stopped without eos event")
+                write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "no-eof-event")
                 self.alive_timer.stop()
                 self.doEofInternal()
             else:
-                self.last_position = self.current_position
                 self.first_start = False
+                self.last_position = self.current_position
         else:
+            write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "position-0")
             self.alive_timer.stop()
             self.doEofInternal()
 
+    def playSection(self, service):
+        service_path = service.getPath()
+        self.first_start = True
+        logger.info("service_path: %s, file_size: %d", service_path, os.path.getsize(service_path))
+        write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "play-section")
+        self.showPVRStatePic(False)
+        self.pvr_state_dialog.hide()
+        self.session.nav.playService(service)
+
     def doEofInternal(self, playing=True):
         logger.info("playing: %s, self.execing: %s", playing, self.execing)
-        self.alive_timer.stop()
-        self.showPVRState(False)
 
-        logger.info("box_type: %s, recorder_id: %s", getBoxType(), self.recorder_id)
-        if not getBoxType().startswith("dream") and self.recorder_id in {"hls_m4s", "hls_basic"}:
-            if self.first_start:
-                logger.info("Restarting playback...")
-                self.first_start = False
-                self.playpause()
-                self.showPVRState(True)
-                self.start_alive_timer()
+        self.alive_timer.stop()
+        self.wait_timer.stop()
+
+        self.showPVRStatePic(False)
+        self.pvr_state_dialog.hide()
+        self.hide()
+
+        write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "end-of-file")
+
+        if self.first_start:
+            logger.info("restarting playback...")
+            self.first_start = False
+            self.playpause()
+            self.start_alive_timer()
+        else:
+            logger.info("starting next service...")
+            service = self.getNextService()
+            if service:
+                self.service = service
+                self.playSection(service)
             else:
-                logger.info("Stopping playback...")
-                self.showPVRState(True)
-                self.session.nav.stopService()
+                logger.error("No recording files available, waiting...")
+                write_log(self.rec_dir, self.service.getPath(), self.section_index, "---", "no-next-section")
+                self.wait_timer.start(5000, True)
 
     def showMovies(self):
         logger.info("...")

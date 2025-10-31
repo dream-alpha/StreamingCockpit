@@ -21,6 +21,7 @@ import os
 from Components.config import config
 from Screens.MessageBox import MessageBox
 from .CockpitPlayer import CockpitPlayer
+from .HLSLivePlayer import HLSLivePlayer
 from .Loading import Loading
 from .Debug import logger
 from .ServiceCenter import ServiceCenter
@@ -65,10 +66,15 @@ class SocketClientHandler():
             self.serverIsReady()
         elif command == "start":
             self.rec_files.append(args)
+            recorder_id = args.get("recorder_id", "unknown")
+            if recorder_id == "hls_live":
+                recorder = HLSLivePlayer
+            else:
+                recorder = CockpitPlayer
             if self.first:
                 self.first = False
                 self.loading.stop()
-                self.playMovie()
+                self.playMovie(recorder)
         elif command == "stop":
             reason = args.get("reason", "none")
             if reason == "error":
@@ -100,8 +106,8 @@ class SocketClientHandler():
         self.socket_client.send_message(["start", args])
         self.loading.start(-1, _("Starting playback..."))
 
-    def playMovie(self):
-        logger.info("...")
+    def playMovie(self, recorder):
+        logger.info("recorder: %s", recorder)
         media_title = self.media.get("title", "")
         if not media_title:
             media_title = self.media.get("name", "")
@@ -119,7 +125,7 @@ class SocketClientHandler():
         logger.info("event_list: %s", event_list)
         self.session.openWithCallback(
             self.playMovieCallback,
-            CockpitPlayer,
+            recorder,
             None,
             config.plugins.streamingcockpit,
             self.showInfo,

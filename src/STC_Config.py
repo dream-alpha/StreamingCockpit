@@ -44,6 +44,8 @@ class STC_Config:
             provider_id = "root"
         if provider_id not in config:
             config[provider_id] = {}
+        if level == 1 and config[provider_id][str(level)] != index:
+            config[provider_id][str(2)] = 0
         config[provider_id][str(level)] = index
 
     def load(self):

@@ -41,6 +41,6 @@ class ConfigInit():
         config.plugins.streamingcockpit.show_ads = ConfigYesNo(default=False)
         config.plugins.streamingcockpit.buffering = ConfigInteger(default=BUFFERING)
         config.plugins.streamingcockpit.av1 = ConfigYesNo(default=False)
-        config.plugins.streamingcockpit.quality = ConfigSelection(default="provider", choices=[("provider", _("Provider")), ("480p", "480p"), ("720p", "720p"), ("1080p", "1080p"), ("best", _("best"))])
+        config.plugins.streamingcockpit.quality = ConfigSelection(default="provider", choices=[("provider", _("Provider")), ("480p", "480p"), ("720p", "720p"), ("1080p", "1080p")])
 
         initLogging()
